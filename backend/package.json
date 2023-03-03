@@ -1,0 +1,23 @@
+{
+  "name": "@bensku/engram-backend",
+  "description": "",
+  "scripts": {
+    "openapi-clients": "openapi-typescript vendor/schema/openai.yaml --output generated/openai.d.ts",
+    "routes": "tsoa spec-and-routes",
+    "postinstall": "npm run openapi-clients && npm run routes",
+    "dev": "concurrently 'nodemon --config nodemon.app.json' 'nodemon --config nodemon.tsoa.json'"
+  },
+  "dependencies": {
+    "@koa/router": "^12.0.0",
+    "cohere-ai": "^6.0.0",
+    "koa": "^2.14.1",
+    "tsoa": "^5.1.1"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.13.5",
+    "@types/koa__router": "^12.0.0",
+    "@types/node": "^18.14.5",
+    "nodemon": "^2.0.21",
+    "ts-node": "^10.9.1"
+  }
+}

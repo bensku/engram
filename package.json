@@ -1,0 +1,31 @@
+{
+  "name": "@bensku/engram",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "all": "concurrently 'npm run dev -w backend' 'npm run dev -w frontend'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bensku/engram.git"
+  },
+  "author": "bensku",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bensku/engram/issues"
+  },
+  "homepage": "https://github.com/bensku/engram#readme",
+  "dependencies": {
+    "@bensku/engram-shared": "*",
+    "concurrently": "^7.6.0"
+  },
+  "devDependencies": {
+    "@bensku/engram-devtools": "*"
+  },
+  "workspaces": [
+    "shared",
+    "shared-devtools",
+    "backend",
+    "frontend"
+  ]
+}
