@@ -12,6 +12,6 @@ module.exports = {
     'parserOptions': {
         'ecmaVersion': 13,
         'sourceType': 'module',
-        'project': './common/tsconfig.json'
+        'project': './shared/tsconfig.json'
     }
 };

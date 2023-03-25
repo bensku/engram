@@ -3,10 +3,12 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "openapi-clients": "openapi-typescript ../backend/generated/swagger.json --output generated/engram.d.ts",
+    "dev": "concurrently 'vite' 'nodemon --config nodemon.api.json'",
     "build": "tsc && vite build"
   },
   "dependencies": {
+    "beercss": "^3.0.8",
     "preact": "^10.13.0"
   },
   "devDependencies": {

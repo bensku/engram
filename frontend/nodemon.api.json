@@ -1,0 +1,5 @@
+{
+  "exec": "npm run openapi-clients",
+  "watch": ["../backend/generated/swagger.json"],
+  "ext": "*"
+}
