@@ -22,12 +22,27 @@ export const Topic = ({ id }: { id: string }) => {
   }, [id]);
 
   const post = (text: string) => {
+    // Add user message to chat history
+    const message = {
+      id: self.crypto.randomUUID(),
+      text,
+    };
+    // Ugly hack: mutate messages, because it is referred to later on
+    // BEFORE this function returns
+    messages.push({ type: 'user', ...message });
+    setMessages(messages);
+
     void (async () => {
-      const msg = { ...EMPTY_MSG };
-      for await (const part of postMessage({
+      // Post user message to server
+      const reply = postMessage({
         topicId: id,
-        message: text,
-      })) {
+        message,
+      });
+
+      // Stream reply back from server
+      // When server is finished, prepare for user reply
+      const msg = { ...EMPTY_MSG };
+      for await (const part of reply) {
         if (part.type == 'msg') {
           msg.text += part.data;
           setLast({ ...msg });

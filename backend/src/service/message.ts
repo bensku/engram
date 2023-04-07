@@ -11,11 +11,6 @@ interface BaseMessage {
    * either the user or the LLM.
    */
   text: string;
-
-  /**
-   * Search query derived from this message and its context.
-   */
-  searchQuery?: string;
 }
 
 interface UserMessage extends BaseMessage {

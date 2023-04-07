@@ -14,11 +14,11 @@ export class MessageController extends Controller {
   @Post('{topicId}')
   async postAndGetReply(
     @Path() topicId: string,
-    @Body() message: string,
+    @Body() message: Omit<Message, 'type'>,
   ): Promise<unknown> {
     // PassThrough is not valid return type; OpenAPI doesn't really handle SSE
     const stream = new ReplyStream();
-    void handleMessage(topicId, message, stream);
+    void handleMessage(topicId, { ...message, type: 'user' }, stream);
     return Promise.resolve(stream.nodeStream);
   }
 }
