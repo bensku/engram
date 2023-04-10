@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "beercss": "^3.0.8",
-    "preact": "^10.13.0"
+    "preact": "^10.13.0",
+    "react-textarea-autosize": "^8.4.1"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",

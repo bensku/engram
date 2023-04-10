@@ -3,6 +3,8 @@ import { readLines } from '@bensku/engram-shared/src/sse';
 import { CompletionPart } from '@bensku/engram-shared/src/types';
 import { responses } from '../types';
 
+export const listTopics = fetcher.path('/topic').method('get').create();
+
 export const getTopic = fetcher.path('/topic/{id}').method('get').create();
 
 export const getMessages = fetcher

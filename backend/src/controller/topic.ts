@@ -2,10 +2,10 @@ import { Body, Controller, Get, Path, Post, Route } from 'tsoa';
 
 interface Topic {
   id: string;
-  language: string;
+  title: string;
 }
 
-type TopicParams = Pick<Topic, 'language'>;
+type TopicParams = Partial<Topic>;
 
 @Route('topic')
 export class TopicController extends Controller {
@@ -18,10 +18,15 @@ export class TopicController extends Controller {
   async topic(@Path() id: string): Promise<Topic> {
     return {
       id: '',
-      language: '',
+      title: '',
     };
   }
 
   @Post('')
-  async newTopic(@Body() params: TopicParams): Promise<void> {}
+  async newTopic(@Body() params: TopicParams): Promise<Topic> {
+    return {
+      id: '',
+      title: '',
+    };
+  }
 }

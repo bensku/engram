@@ -57,13 +57,14 @@ export const Topic = ({ id }: { id: string }) => {
   };
 
   return (
-    <div>
-      <h1>Topic name</h1>
-      {messages.map((msg) => (
-        <Message msg={msg} key={msg.id} />
-      ))}
-      {last && <Message msg={last} />}
+    <>
+      <div class="scroll large-padding">
+        {messages.map((msg) => (
+          <Message msg={msg} key={msg.id} />
+        ))}
+        {last && <Message msg={last} />}
+      </div>
       <MessageForm onSubmit={post} />
-    </div>
+    </>
   );
 };
