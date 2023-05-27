@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "all": "concurrently 'npm run dev -w backend' 'npm run dev -w frontend'"
+    "all": "concurrently 'npm run dev -w backend' 'npm run dev -w frontend'",
+    "migrations": "npm run migrations -w backend"
   },
   "repository": {
     "type": "git",

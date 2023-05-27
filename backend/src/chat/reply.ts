@@ -11,6 +11,16 @@ export class ReplyStream {
     this.#stream = new PassThrough();
   }
 
+  start(replyTo: Message, agent: string, time: number) {
+    const entry = {
+      type: 'start',
+      replyTo,
+      agent,
+      time,
+    };
+    this.#stream.write(`data: ${JSON.stringify(entry)}\n\n`);
+  }
+
   appendToMsg(data: string) {
     const entry = {
       type: 'msg',
@@ -19,8 +29,8 @@ export class ReplyStream {
     this.#stream.write(`data: ${JSON.stringify(entry)}\n\n`);
   }
 
-  close() {
-    this.#stream.write('data: {"type": "end"}');
+  close(id: number) {
+    this.#stream.write(`data: {"type": "end", "id": ${id}}`);
     this.#stream.end();
   }
 
@@ -39,7 +49,6 @@ export async function generateReply(
   let text = '';
   for await (const part of completions(context)) {
     if (part == CompletionEnd) {
-      out.close();
       break;
     } else {
       text += part;
@@ -47,5 +56,11 @@ export async function generateReply(
     }
   }
 
-  return { type: 'bot', id: randomUUID(), text, widgets: [] };
+  return {
+    type: 'bot',
+    id: -1,
+    text,
+    agent: options.model,
+    time: Date.now(),
+  };
 }

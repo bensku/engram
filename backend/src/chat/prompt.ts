@@ -1,9 +1,11 @@
 import { Message } from '../service/message';
 
 function simplePrompt(system: string, user?: string): Message[] {
-  const msgs: Message[] = [{ type: 'system', id: 'system', text: system }];
+  const msgs: Message[] = [
+    { type: 'system', id: -2, text: system, time: Date.now() },
+  ];
   if (user) {
-    msgs.push({ type: 'user', id: 'injected', text: user });
+    msgs.push({ type: 'user', id: -1, text: user, time: Date.now() });
   }
   return msgs;
 }

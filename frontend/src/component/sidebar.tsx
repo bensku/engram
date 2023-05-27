@@ -2,15 +2,15 @@ import { responses } from '../types';
 
 export const SideBar = () => {
   return (
-    <div
-      class="fixed vertical medium-padding surface-variant"
-      style={'width: 15vw;'}
+    <nav
+      class="fixed vertical small-padding surface-variant"
+      style={{ width: '22em', alignItems: 'stretch' }}
     >
       <UserCard />
       <NewTopicButton />
       <TopicList />
       <div class="spacer" style={'height: 100vh;'} />
-    </div>
+    </nav>
   );
 };
 
@@ -33,7 +33,7 @@ const UserCard = () => {
 
 const NewTopicButton = () => {
   return (
-    <button class="border row small-padding secondary-container primary-text">
+    <button class="border row small-padding surface-variant primary-text">
       <i>add</i>
       New topic
     </button>
@@ -43,7 +43,7 @@ const NewTopicButton = () => {
 const TopicList = () => {
   const topics: responses['Topic'][] = [
     { id: 'test1', title: 'Test topic' },
-    { id: 'test1', title: 'Test topic 2' },
+    { id: 'test2', title: 'Test topic 2 with a very long name' },
   ];
 
   return (
@@ -51,13 +51,12 @@ const TopicList = () => {
       {topics.map((topic) => (
         <button
           key={topic.id}
-          class="row no-margin no-padding border secondary-container primary-text"
+          class="row no-margin no-padding no-space surface-variant primary-text"
         >
           <i class="small-padding">chat</i>
-          {topic.title}
-          <div class="spacer max" />
+          <div class="max left-align truncate">{topic.title}</div>
           <button class="transparent circle front">
-            <i>delete</i>
+            <i class="no-padding">delete</i>
             <div class="tooltip">Delete topic</div>
           </button>
         </button>

@@ -3,13 +3,6 @@ import { responses } from '../types';
 import { getMessages, postMessage } from '../service/topic';
 import { useEffect, useState } from 'preact/hooks';
 
-const EMPTY_MSG: responses['BotMessage'] = {
-  type: 'bot',
-  id: 'foo',
-  text: '',
-  widgets: [],
-};
-
 export const Topic = ({ id }: { id: string }) => {
   const [messages, setMessages] = useState<responses['Message'][]>([]);
   const [last, setLast] = useState<responses['Message']>();
@@ -22,32 +15,39 @@ export const Topic = ({ id }: { id: string }) => {
   }, [id]);
 
   const post = (text: string) => {
-    // Add user message to chat history
-    const message = {
-      id: self.crypto.randomUUID(),
-      text,
-    };
-    // Ugly hack: mutate messages, because it is referred to later on
-    // BEFORE this function returns
-    messages.push({ type: 'user', ...message });
-    setMessages(messages);
-
     void (async () => {
       // Post user message to server
       const reply = postMessage({
         topicId: id,
-        message,
+        message: { message: text },
       });
 
       // Stream reply back from server
       // When server is finished, prepare for user reply
-      const msg = { ...EMPTY_MSG };
+      const msg: responses['BotMessage'] = {
+        type: 'bot',
+        id: -1,
+        agent: '',
+        text: '',
+        time: Date.now(),
+      };
       for await (const part of reply) {
-        if (part.type == 'msg') {
+        if (part.type == 'start') {
+          messages.push({
+            type: 'user',
+            id: part.replyTo.id,
+            text,
+            time: part.replyTo.time,
+          });
+          msg.agent = part.agent;
+          msg.time = part.time;
+          setMessages([...messages]);
+        } else if (part.type == 'msg') {
           msg.text += part.data;
           setLast({ ...msg });
         } else if (part.type == 'end') {
           // Don't refer to last, it has not been updated
+          msg.id = part.id;
           setMessages([...messages, msg]);
           setLast(undefined);
           return;
@@ -58,7 +58,7 @@ export const Topic = ({ id }: { id: string }) => {
 
   return (
     <>
-      <div class="scroll large-padding">
+      <div class="large-padding">
         {messages.map((msg) => (
           <Message msg={msg} key={msg.id} />
         ))}

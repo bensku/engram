@@ -7,7 +7,7 @@ const App = () => {
   return (
     <>
       <SideBar />
-      <main class="responsive scroll">
+      <main class="responsive" style={{ marginLeft: '22em', maxWidth: '80em' }}>
         <Topic id="test" />
       </main>
     </>

@@ -1,7 +1,7 @@
 import { BASE_URL, fetcher } from './api';
 import { readLines } from '@bensku/engram-shared/src/sse';
 import { CompletionPart } from '@bensku/engram-shared/src/types';
-import { responses } from '../types';
+import { operations } from '../types';
 
 export const listTopics = fetcher.path('/topic').method('get').create();
 
@@ -17,7 +17,7 @@ export async function* postMessage({
   message,
 }: {
   topicId: string;
-  message: Omit<responses['Message'], 'type'>;
+  message: operations['PostAndGetReply']['requestBody']['content']['application/json'];
 }) {
   const response = await fetch(`${BASE_URL}/message/${topicId}`, {
     method: 'POST',

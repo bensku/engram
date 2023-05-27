@@ -5,15 +5,18 @@
     "openapi-clients": "concurrently 'openapi-typescript vendor/schema/openai.yaml --output generated/openai.d.ts' 'openapi-typescript vendor/schema/qdrant.json --output generated/qdrant.d.ts'",
     "routes": "tsoa spec-and-routes",
     "postinstall": "npm run openapi-clients && npm run routes",
-    "dev": "concurrently 'nodemon --config nodemon.app.json' 'nodemon --config nodemon.tsoa.json'"
+    "dev": "concurrently 'nodemon --config nodemon.app.json' 'nodemon --config nodemon.tsoa.json'",
+    "migrations": "drizzle-kit generate:pg"
   },
   "dependencies": {
     "@googleapis/customsearch": "^1.0.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "cohere-ai": "^6.0.0",
+    "drizzle-orm": "^0.26.1",
     "koa": "^2.14.1",
     "koa-body": "^6.0.1",
+    "postgres": "^3.3.4",
     "tsoa": "^5.1.1"
   },
   "devDependencies": {
@@ -22,6 +25,8 @@
     "@types/koa__router": "^12.0.0",
     "@types/node": "^18.14.5",
     "@types/node-fetch": "^2.6.2",
+    "dotenv": "^16.0.3",
+    "drizzle-kit": "^0.18.1",
     "nodemon": "^2.0.21",
     "ts-node": "^10.9.1"
   }

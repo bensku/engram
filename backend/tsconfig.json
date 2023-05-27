@@ -15,5 +15,5 @@
         "resolveJsonModule": true,
         "experimentalDecorators": true
     },
-    "include": ["./src"]
+    "include": ["./src", "./drizzle.config.ts"]
 }
