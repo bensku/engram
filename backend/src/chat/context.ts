@@ -1,9 +1,9 @@
-import { RedisMessageStorage } from '../service/impl/redis';
+import { DbMessageStorage } from '../service/impl/postgres';
 import { Message, MessageStorage } from '../service/message';
-import { TopicOptions } from './options';
+import { TopicOptions } from '../service/topic';
 import { getPrompt } from './prompt';
 
-const storage: MessageStorage = new RedisMessageStorage();
+const storage: MessageStorage = new DbMessageStorage();
 
 export async function fullContext(topicId: number): Promise<Message[]> {
   return (await storage.get(topicId)) ?? [];

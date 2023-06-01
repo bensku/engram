@@ -4,10 +4,19 @@
   "controllerPathGlobs": ["src/controller/*"],
   "spec": {
     "outputDirectory": "generated",
-    "specVersion": 3
+    "specVersion": 3,
+    "securityDefinitions": {
+      "auth": {
+        "type": "oauth2",
+        "authorizationUrl": "",
+        "flow": "implicit",
+        "scopes": {}
+      }
+    }
   },
   "routes": {
     "routesDir": "generated",
-    "middleware": "koa"
+    "middleware": "koa",
+    "authenticationModule": "./src/auth.ts"
   }
 }

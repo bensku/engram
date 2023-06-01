@@ -1,11 +1,6 @@
-import { RedisMessageStorage } from '../service/impl/redis';
-import {
-  Message,
-  MessageStorage,
-  PostMessageRequest,
-} from '../service/message';
-import { appendContext, fullContext, topicContext } from './context';
-import { TopicOptions } from './options';
+import { Message, PostMessageRequest } from '../service/message';
+import { TopicOptions } from '../service/topic';
+import { appendContext, topicContext } from './context';
 import { generateReply, ReplyStream } from './reply';
 
 export async function handleMessage(

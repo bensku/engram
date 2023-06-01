@@ -1,24 +1,41 @@
 import { Message, MessageForm } from './message';
 import { responses } from '../types';
-import { getMessages, postMessage } from '../service/topic';
+import { createTopic, getMessages, postMessage } from '../service/topic';
 import { useEffect, useState } from 'preact/hooks';
+import { RoutableProps } from 'preact-router';
 
-export const Topic = ({ id }: { id: string }) => {
+export const Topic = ({ id }: { id?: string } & RoutableProps) => {
+  // eslint-disable-next-line prefer-const
+  let [topicId, setTopicId] = useState(-1);
   const [messages, setMessages] = useState<responses['Message'][]>([]);
   const [last, setLast] = useState<responses['Message']>();
 
   useEffect(() => {
-    void (async () => {
-      const res = await getMessages({ topicId: id });
-      setMessages(res.data);
-    })();
+    if (id !== undefined) {
+      void (async () => {
+        const topicId = parseInt(id);
+        setTopicId(topicId);
+        const res = await getMessages({ topicId });
+        setMessages(res.data);
+      })();
+    } else {
+      // New topic
+      setTopicId(-1);
+      setMessages([]);
+    }
   }, [id]);
 
   const post = (text: string) => {
     void (async () => {
+      if (topicId == -1) {
+        const newTopic = (await createTopic({})).data;
+        topicId = newTopic.id;
+        setTopicId(newTopic.id);
+      }
+
       // Post user message to server
       const reply = postMessage({
-        topicId: id,
+        topicId,
         message: { message: text },
       });
 

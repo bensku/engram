@@ -1,8 +1,7 @@
-import { randomUUID } from 'crypto';
 import { PassThrough } from 'stream';
 import { CompletionEnd, completionsForModel } from '../service/completion';
 import { Message } from '../service/message';
-import { TopicOptions } from './options';
+import { TopicOptions } from '../service/topic';
 
 export class ReplyStream {
   #stream: PassThrough;

@@ -7,6 +7,8 @@ export const listTopics = fetcher.path('/topic').method('get').create();
 
 export const getTopic = fetcher.path('/topic/{id}').method('get').create();
 
+export const createTopic = fetcher.path('/topic').method('post').create();
+
 export const getMessages = fetcher
   .path('/message/{topicId}')
   .method('get')
@@ -16,7 +18,7 @@ export async function* postMessage({
   topicId,
   message,
 }: {
-  topicId: string;
+  topicId: number;
   message: operations['PostAndGetReply']['requestBody']['content']['application/json'];
 }) {
   const response = await fetch(`${BASE_URL}/message/${topicId}`, {

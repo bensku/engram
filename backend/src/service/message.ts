@@ -39,6 +39,6 @@ export interface PostMessageRequest {
 export type Message = UserMessage | BotMessage | SystemMessage;
 
 export interface MessageStorage {
-  get(topic: number): Promise<Message[] | null>;
-  append(topic: number, msg: Message): Promise<number>;
+  get(topicId: number): Promise<Message[] | null>;
+  append(topicId: number, msg: Message): Promise<number>;
 }

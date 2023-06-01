@@ -1,0 +1,1 @@
+ALTER TABLE "message" ALTER COLUMN "time" SET DATA TYPE bigint;

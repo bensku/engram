@@ -1,5 +1,8 @@
 {
   "exec": "ts-node src/app.ts",
   "watch": ["src", "generated"],
-  "ext": "ts"
+  "ext": "ts",
+  "env": {
+    "NODE_ENV": "dev"
+  }
 }

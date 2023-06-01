@@ -1,3 +1,6 @@
+import { route } from 'preact-router';
+import { useEffect, useState } from 'preact/hooks';
+import { listTopics } from '../service/topic';
 import { responses } from '../types';
 
 export const SideBar = () => {
@@ -32,8 +35,16 @@ const UserCard = () => {
 };
 
 const NewTopicButton = () => {
+  const newTopic = () => {
+    // Topic is actually created when first message is sent!
+    route('/');
+  };
+
   return (
-    <button class="border row small-padding surface-variant primary-text">
+    <button
+      class="border row small-padding surface-variant primary-text"
+      onClick={newTopic}
+    >
       <i>add</i>
       New topic
     </button>
@@ -41,10 +52,13 @@ const NewTopicButton = () => {
 };
 
 const TopicList = () => {
-  const topics: responses['Topic'][] = [
-    { id: 'test1', title: 'Test topic' },
-    { id: 'test2', title: 'Test topic 2 with a very long name' },
-  ];
+  const [topics, setTopics] = useState<responses['Topic'][]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      setTopics((await listTopics({})).data);
+    })();
+  }, []);
 
   return (
     <div class="vertical">
@@ -52,6 +66,7 @@ const TopicList = () => {
         <button
           key={topic.id}
           class="row no-margin no-padding no-space surface-variant primary-text"
+          onClick={() => route(`/${topic.id}`)}
         >
           <i class="small-padding">chat</i>
           <div class="max left-align truncate">{topic.title}</div>
