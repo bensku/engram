@@ -41,4 +41,6 @@ export type Message = UserMessage | BotMessage | SystemMessage;
 export interface MessageStorage {
   get(topicId: number): Promise<Message[] | null>;
   append(topicId: number, msg: Message): Promise<number>;
+  update(messageId: number, content: string): Promise<void>;
+  delete(messageId: number): Promise<void>;
 }

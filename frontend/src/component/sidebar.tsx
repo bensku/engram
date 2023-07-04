@@ -3,7 +3,15 @@ import { useEffect, useState } from 'preact/hooks';
 import { listTopics } from '../service/topic';
 import { responses } from '../types';
 
-export const SideBar = () => {
+export const SideBar = ({ currentTopic }: { currentTopic: string }) => {
+  const [topics, setTopics] = useState<responses['Topic'][]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      setTopics((await listTopics({})).data);
+    })();
+  }, [currentTopic]);
+
   return (
     <nav
       class="fixed vertical small-padding surface-variant"
@@ -11,7 +19,7 @@ export const SideBar = () => {
     >
       <UserCard />
       <NewTopicButton />
-      <TopicList />
+      <TopicList topics={topics} currentTopic={currentTopic} />
       <div class="spacer" style={'height: 100vh;'} />
     </nav>
   );
@@ -51,15 +59,14 @@ const NewTopicButton = () => {
   );
 };
 
-const TopicList = () => {
-  const [topics, setTopics] = useState<responses['Topic'][]>([]);
-
-  useEffect(() => {
-    void (async () => {
-      setTopics((await listTopics({})).data);
-    })();
-  }, []);
-
+const TopicList = ({
+  topics,
+  currentTopic,
+}: {
+  topics: responses['Topic'][];
+  currentTopic: string;
+}) => {
+  // TODO highlight current topic
   return (
     <div class="vertical">
       {topics.map((topic) => (

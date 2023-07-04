@@ -1,21 +1,24 @@
 import { render } from 'preact';
 import 'beercss';
-import { Topic } from './component/topic';
+import { EmptyTopic, Topic } from './component/topic';
 import { SideBar } from './component/sidebar';
-import Router from 'preact-router';
+import Router, { RoutableProps } from 'preact-router';
 
-const App = () => {
+const App = ({ id }: { id?: string } & RoutableProps) => {
   return (
     <>
-      <SideBar />
+      <SideBar currentTopic={id ?? ''} />
       <main class="responsive" style={{ marginLeft: '22em', maxWidth: '80em' }}>
-        <Router>
-          <Topic path="/:id" />
-          <Topic default />
-        </Router>
+        {id ? <Topic id={parseInt(id)} /> : <EmptyTopic />}
       </main>
     </>
   );
 };
 
-render(<App />, document.getElementById('app') as HTMLElement);
+render(
+  <Router>
+    <App path="/:id" />
+    <App default />
+  </Router>,
+  document.getElementById('app') as HTMLElement,
+);

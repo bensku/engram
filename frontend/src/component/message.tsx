@@ -4,10 +4,17 @@ import ReactTextareaAutosize from 'react-textarea-autosize';
 import { responses } from '../types';
 import { formatDate } from '../utils';
 
-export const Message = ({ msg }: { msg: responses['Message'] }) => {
+export const Message = ({
+  msg,
+  replaceMsg,
+}: {
+  msg: responses['Message'];
+  replaceMsg: (id: number, msg: responses['Message'] | null) => void;
+}) => {
   const icon = msg.type == 'user' ? 'person' : 'robot';
   const sender = msg.type == 'bot' ? msg.agent : 'you';
   const color = msg.type == 'user' ? 'indigo1' : '';
+
   return (
     <article class={`large-margin ${color}`}>
       <div class="row no-space bolder">
@@ -22,7 +29,7 @@ export const Message = ({ msg }: { msg: responses['Message'] }) => {
               <i>edit</i>
               Edit
             </a>
-            <a class="error-text">
+            <a class="error-text" onClick={() => replaceMsg(msg.id, null)}>
               <i>delete</i>
               Delete
             </a>
@@ -31,6 +38,25 @@ export const Message = ({ msg }: { msg: responses['Message'] }) => {
       </div>
       <div>{msg.text}</div>
     </article>
+  );
+};
+
+export const MessageList = ({
+  messages,
+  last,
+  replaceMessage,
+}: {
+  messages: responses['Message'][];
+  last?: responses['Message'];
+  replaceMessage: (id: number, msg: responses['Message'] | null) => void;
+}) => {
+  return (
+    <div class="large-padding">
+      {messages.map((msg) => (
+        <Message msg={msg} key={msg.id} replaceMsg={replaceMessage} />
+      ))}
+      {last && <Message msg={last} replaceMsg={() => null} />}
+    </div>
   );
 };
 
@@ -46,6 +72,7 @@ export const MessageForm = ({
       return; // No text to send, do nothing
     }
     onSubmit(ref.current.value);
+    ref.current.value = '';
   };
 
   const [height, setHeight] = useState(0);
@@ -67,7 +94,6 @@ export const MessageForm = ({
             maxRows={20}
             onHeightChange={setHeight}
           />
-          <span class="helper">Your message</span>
         </div>
         <button
           class="min transparent circle"

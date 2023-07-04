@@ -1,14 +1,16 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Path,
   Post,
+  Put,
   Request,
   Route,
   Security,
 } from 'tsoa';
-import { fullContext } from '../chat/context';
+import { deleteMessage, fullContext, updateMessage } from '../chat/context';
 import { handleMessage } from '../chat/pipeline';
 import { ReplyStream } from '../chat/reply';
 import { Message, PostMessageRequest } from '../service/message';
@@ -38,5 +40,26 @@ export class MessageController extends Controller {
     const stream = new ReplyStream();
     void handleMessage(topicId, message, stream);
     return Promise.resolve(stream.nodeStream);
+  }
+
+  @Security('auth')
+  @Put('{messageId}')
+  async updateMsg(
+    @Request() req: RequestBody,
+    @Path() messageId: number,
+    @Body() message: PostMessageRequest,
+  ): Promise<void> {
+    // TODO authz
+    await updateMessage(messageId, message.message);
+  }
+
+  @Security('auth')
+  @Delete('{messageId}')
+  async deleteMsg(
+    @Request() req: RequestBody,
+    @Path() messageId: number,
+  ): Promise<void> {
+    // TODO authz
+    await deleteMessage(messageId);
   }
 }

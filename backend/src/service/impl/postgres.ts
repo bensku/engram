@@ -77,4 +77,13 @@ export class DbMessageStorage implements MessageStorage {
       .returning({ id: message.id });
     return result[0].id;
   }
+  async update(messageId: number, content: string): Promise<void> {
+    await db.update(message).set({
+      id: messageId,
+      text: content,
+    });
+  }
+  async delete(messageId: number): Promise<void> {
+    await db.delete(message).where(eq(message.id, messageId));
+  }
 }

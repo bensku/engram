@@ -4,6 +4,7 @@ import {
   Get,
   Path,
   Post,
+  Put,
   Request,
   Route,
   Security,
@@ -45,5 +46,18 @@ export class TopicController extends Controller {
     // Allow the client set title, but NOT user id or topic id
     const topic = { title: '', ...params, user: req.user.id };
     return { ...topic, id: await storage.save(topic) };
+  }
+
+  @Security('auth')
+  @Put('{id}')
+  async updateTopic(
+    @Request() req: RequestBody,
+    @Path() id: number,
+    @Body() params: Partial<Topic> & { id: number },
+  ): Promise<void> {
+    if ((await storage.get(id))?.user != req.user.id) {
+      throw new ForbiddenError();
+    }
+    await storage.save({ id, title: params.title });
   }
 }

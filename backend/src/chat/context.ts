@@ -24,3 +24,11 @@ export async function appendContext(
 ): Promise<number> {
   return storage.append(topicId, message);
 }
+
+export function updateMessage(id: number, content: string): Promise<void> {
+  return storage.update(id, content);
+}
+
+export function deleteMessage(id: number): Promise<void> {
+  return storage.delete(id);
+}
