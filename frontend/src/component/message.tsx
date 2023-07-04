@@ -16,7 +16,7 @@ export const Message = ({
   const color = msg.type == 'user' ? 'indigo1' : '';
 
   return (
-    <article class={`large-margin ${color}`}>
+    <article class={`medium-margin ${color}`}>
       <div class="row no-space bolder">
         <i class="no-margin no-padding">{icon}</i>
         <div class="max">
@@ -51,7 +51,7 @@ export const MessageList = ({
   replaceMessage: (id: number, msg: responses['Message'] | null) => void;
 }) => {
   return (
-    <div class="large-padding">
+    <div class="message-list">
       {messages.map((msg) => (
         <Message msg={msg} key={msg.id} replaceMsg={replaceMessage} />
       ))}
@@ -79,14 +79,13 @@ export const MessageForm = ({
 
   return (
     <>
-      <div class="spacer" style={`height: ${height}px;`} />
       <div
-        class="fixed bottom front large-padding row background bottom-align"
-        style={`width: inherit; max-width: inherit; height: ${height}px;`}
+        class="message-form front large-padding row background"
+        style={`height: ${height}px;`}
       >
         <div
-          class="max field textarea border bottom-align background"
-          style={`width: inherit; max-width: inherit; height: ${height}px;`}
+          class="field textarea border background"
+          style={`height: ${height}px;`}
         >
           <ReactTextareaAutosize
             ref={ref}
@@ -95,11 +94,7 @@ export const MessageForm = ({
             onHeightChange={setHeight}
           />
         </div>
-        <button
-          class="min transparent circle"
-          onClick={submit}
-          style={'left: -60px;'}
-        >
+        <button class="send-message min transparent circle" onClick={submit}>
           <i>send</i>
           <div class="tooltip">Send message</div>
         </button>

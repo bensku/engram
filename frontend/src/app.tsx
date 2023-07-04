@@ -3,14 +3,13 @@ import 'beercss';
 import { EmptyTopic, Topic } from './component/topic';
 import { SideBar } from './component/sidebar';
 import Router, { RoutableProps } from 'preact-router';
+import './layout.css';
 
 const App = ({ id }: { id?: string } & RoutableProps) => {
   return (
     <>
       <SideBar currentTopic={id ?? ''} />
-      <main class="responsive" style={{ marginLeft: '22em', maxWidth: '80em' }}>
-        {id ? <Topic id={parseInt(id)} /> : <EmptyTopic />}
-      </main>
+      <main>{id ? <Topic id={parseInt(id)} /> : <EmptyTopic />}</main>
     </>
   );
 };

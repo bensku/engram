@@ -13,14 +13,11 @@ export const SideBar = ({ currentTopic }: { currentTopic: string }) => {
   }, [currentTopic]);
 
   return (
-    <nav
-      class="fixed vertical small-padding surface-variant"
-      style={{ width: '22em', alignItems: 'stretch' }}
-    >
+    <nav class="small-padding surface-variant">
       <UserCard />
       <NewTopicButton />
       <TopicList topics={topics} currentTopic={currentTopic} />
-      <div class="spacer" style={'height: 100vh;'} />
+      <div class="spacer" />
     </nav>
   );
 };
@@ -68,7 +65,7 @@ const TopicList = ({
 }) => {
   // TODO highlight current topic
   return (
-    <div class="vertical">
+    <>
       {topics.map((topic) => (
         <button
           key={topic.id}
@@ -83,6 +80,6 @@ const TopicList = ({
           </button>
         </button>
       ))}
-    </div>
+    </>
   );
 };

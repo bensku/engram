@@ -1,0 +1,57 @@
+/* sidebar: style={{ width: '22em', alignItems: 'stretch' }} */
+/* main: style={{ marginLeft: '22em', maxWidth: '80em' }} */
+/* sidebar: style={'height: 100vh;'} */
+/* send message button: style={'left: -60px;'} */
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+nav {
+  width: 20em;
+  flex-shrink: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 0px;
+  margin: 0px;
+}
+
+nav > * {
+  width: 100%;
+}
+
+main {
+  margin: auto;
+  margin-top: 2em;
+  margin-bottom: 0px;
+  max-width: 70em;
+  flex-grow: 1;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.message-list {
+  flex-grow: 1;
+  padding-right: 2em;
+  padding-left: 1em;
+  overflow-y: scroll;
+}
+
+.message-form {
+  margin-top: 3em !important;
+  margin-bottom: 1em;
+
+  display: flex;
+  align-items: end;
+}
+
+.message-form > div {
+  width: 100%;
+}
+
+.send-message {
+  left: -60px;
+}
