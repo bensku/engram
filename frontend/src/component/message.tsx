@@ -3,6 +3,8 @@ import { useState } from 'preact/hooks';
 import ReactTextareaAutosize from 'react-textarea-autosize';
 import { responses } from '../types';
 import { formatDate } from '../utils';
+import { ReactMarkdown } from 'react-markdown/lib/react-markdown';
+import rehypeHighlight from 'rehype-highlight/lib';
 
 export const Message = ({
   msg,
@@ -36,7 +38,9 @@ export const Message = ({
           </div>
         </button>
       </div>
-      <div>{msg.text}</div>
+      <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+        {msg.text}
+      </ReactMarkdown>
     </article>
   );
 };

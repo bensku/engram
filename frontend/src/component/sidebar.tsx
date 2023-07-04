@@ -1,23 +1,19 @@
 import { route } from 'preact-router';
-import { useEffect, useState } from 'preact/hooks';
-import { listTopics } from '../service/topic';
+import { deleteTopic } from '../service/topic';
 import { responses } from '../types';
 
-export const SideBar = ({ currentTopic }: { currentTopic: string }) => {
-  const [topics, setTopics] = useState<responses['Topic'][]>([]);
-
-  useEffect(() => {
-    void (async () => {
-      setTopics((await listTopics({})).data);
-    })();
-  }, [currentTopic]);
-
+export const SideBar = ({
+  topics,
+  currentTopic,
+}: {
+  topics: responses['Topic'][];
+  currentTopic: number;
+}) => {
   return (
     <nav class="small-padding surface-variant">
       <UserCard />
       <NewTopicButton />
       <TopicList topics={topics} currentTopic={currentTopic} />
-      <div class="spacer" />
     </nav>
   );
 };
@@ -61,25 +57,50 @@ const TopicList = ({
   currentTopic,
 }: {
   topics: responses['Topic'][];
-  currentTopic: string;
+  currentTopic: number;
 }) => {
   // TODO highlight current topic
   return (
     <>
       {topics.map((topic) => (
-        <button
+        <TopicEntry
           key={topic.id}
-          class="row no-margin no-padding no-space surface-variant primary-text"
-          onClick={() => route(`/${topic.id}`)}
-        >
-          <i class="small-padding">chat</i>
-          <div class="max left-align truncate">{topic.title}</div>
-          <button class="transparent circle front">
-            <i class="no-padding">delete</i>
-            <div class="tooltip">Delete topic</div>
-          </button>
-        </button>
+          topic={topic}
+          isCurrent={topic.id == currentTopic}
+        />
       ))}
     </>
+  );
+};
+
+const TopicEntry = ({
+  topic,
+  isCurrent,
+}: {
+  topic: responses['Topic'];
+  isCurrent: boolean;
+}) => {
+  const deleteThis = () => {
+    void (async () => {
+      await deleteTopic({ id: topic.id });
+      if (isCurrent) {
+        route('/');
+      }
+    })();
+  };
+
+  let styles = 'row no-margin no-padding no-space surface-variant primary-text';
+  if (isCurrent) {
+    styles += ' fill';
+  }
+  return (
+    <button key={topic.id} class={styles} onClick={() => route(`/${topic.id}`)}>
+      <i class="small-padding">chat</i>
+      <div class="max left-align truncate">{topic.title}</div>
+      <button class="transparent circle front" onClick={deleteThis}>
+        <i class="no-padding">delete</i>
+        <div class="tooltip">Delete topic</div>
+      </button>
+    </button>
   );
 };

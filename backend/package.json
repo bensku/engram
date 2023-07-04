@@ -27,7 +27,7 @@
     "@types/node-fetch": "^2.6.2",
     "dotenv": "^16.0.3",
     "drizzle-kit": "^0.18.1",
-    "nodemon": "^2.0.21",
+    "nodemon": "^2.0.22",
     "ts-node": "^10.9.1"
   }
 }

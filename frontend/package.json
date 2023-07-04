@@ -11,10 +11,12 @@
     "beercss": "^3.0.8",
     "preact": "^10.13.0",
     "preact-router": "^4.1.1",
-    "react-textarea-autosize": "^8.4.1"
+    "react-markdown": "^8.0.7",
+    "react-textarea-autosize": "^8.4.1",
+    "rehype-highlight": "^6.0.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
-    "vite": "^4.1.4"
+    "vite": "^4.3.9"
   }
 }

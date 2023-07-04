@@ -10,6 +10,7 @@ import {
   postMessage,
   updateMessage,
 } from '../service/message';
+import { debounce, useDebounce } from '../debounce';
 
 export const EmptyTopic = () => {
   const [title, setTitle] = useState('');
@@ -39,7 +40,13 @@ export const EmptyTopic = () => {
   );
 };
 
-export const Topic = ({ id }: { id: number }) => {
+export const Topic = ({
+  id,
+  updateSidebar,
+}: {
+  id: number;
+  updateSidebar: (id: number, topic: Partial<responses['Topic']>) => void;
+}) => {
   const [title, setTitle] = useState('');
   const [messages, setMessages] = useState<responses['Message'][]>([]);
   const [last, setLast] = useState<responses['Message']>();
@@ -102,10 +109,11 @@ export const Topic = ({ id }: { id: number }) => {
     })();
   };
 
-  const changeTitle = (newTitle: string) => {
+  const updateTitle = debounce((newTitle: string) => {
     setTitle(newTitle);
+    updateSidebar(id, { title: newTitle });
     void updateTopic({ id, title: newTitle });
-  };
+  }, 250);
 
   const replaceMessage = (
     id: number,
@@ -129,7 +137,7 @@ export const Topic = ({ id }: { id: number }) => {
 
   return (
     <>
-      <Title placeholder="Unnamed topic" title={title} setTitle={changeTitle} />
+      <Title placeholder="Unnamed topic" title={title} setTitle={updateTitle} />
       <MessageList
         messages={messages}
         last={last}

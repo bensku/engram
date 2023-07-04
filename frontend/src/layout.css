@@ -1,7 +1,3 @@
-/* sidebar: style={{ width: '22em', alignItems: 'stretch' }} */
-/* main: style={{ marginLeft: '22em', maxWidth: '80em' }} */
-/* sidebar: style={'height: 100vh;'} */
-/* send message button: style={'left: -60px;'} */
 #app {
   display: flex;
   height: 100vh;
@@ -31,6 +27,10 @@ main {
 
   display: flex;
   flex-direction: column;
+}
+
+h1 {
+  flex-shrink: 0;
 }
 
 .message-list {

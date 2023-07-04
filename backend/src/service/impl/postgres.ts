@@ -39,6 +39,9 @@ export class DbTopicStorage implements TopicStorage {
       )[0].id;
     }
   }
+  async delete(id: number): Promise<void> {
+    await db.delete(topic).where(eq(topic.id, id));
+  }
 }
 
 export class DbMessageStorage implements MessageStorage {

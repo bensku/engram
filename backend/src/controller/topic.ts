@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Path,
   Post,
@@ -53,11 +54,23 @@ export class TopicController extends Controller {
   async updateTopic(
     @Request() req: RequestBody,
     @Path() id: number,
-    @Body() params: Partial<Topic> & { id: number },
+    @Body() params: Partial<Omit<Topic, 'id'>>,
   ): Promise<void> {
     if ((await storage.get(id))?.user != req.user.id) {
       throw new ForbiddenError();
     }
     await storage.save({ id, title: params.title });
+  }
+
+  @Security('auth')
+  @Delete('{id}')
+  async deleteTopic(
+    @Request() req: RequestBody,
+    @Path() id: number,
+  ): Promise<void> {
+    if ((await storage.get(id))?.user != req.user.id) {
+      throw new ForbiddenError();
+    }
+    await storage.delete(id);
   }
 }
