@@ -12,18 +12,24 @@ import {
 } from '../service/message';
 import { debounce, useDebounce } from '../debounce';
 
-export const EmptyTopic = () => {
+export const EmptyTopic = ({
+  updateSidebar,
+}: {
+  updateSidebar: (id: number, topic: Partial<responses['Topic']>) => void;
+}) => {
   const [title, setTitle] = useState('');
 
   const newTopic = (text: string) => {
     void (async () => {
       const topicId = (
         await createTopic({
-          title: title ?? `Untitled ${formatDate(Date.now())}`,
+          title,
         })
       ).data.id;
       localStorage.setItem('pending-msg', text);
       route(`/${topicId}`);
+
+      updateSidebar(topicId, { title });
     })();
   };
 

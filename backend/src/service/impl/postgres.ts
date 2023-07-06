@@ -1,6 +1,6 @@
 import { db } from '../../db/core';
 import { message, topic } from '../../db/schema';
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { Message, MessageStorage } from '../message';
 import { Topic, TopicStorage } from '../topic';
 
@@ -8,6 +8,7 @@ export class DbTopicStorage implements TopicStorage {
   async list(userId: number): Promise<Topic[]> {
     return await db.query.topic.findMany({
       where: eq(topic.user, userId),
+      orderBy: asc(topic.id),
     });
   }
   get(id: number): Promise<Topic | undefined> {

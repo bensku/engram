@@ -17,7 +17,7 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
     void (async () => {
       setTopics((await listTopics({})).data);
     })();
-  }, [id]);
+  }, []);
   // TODO do not update topic list each time topic is changed?
 
   const updateTopic = (
@@ -28,8 +28,14 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
       if (topics[i].id == topicId) {
         topics.splice(i, 1, { ...topics[i], ...newTopic });
         setTopics([...topics]);
+        return;
       }
     }
+    // TODO user = current user
+    setTopics([
+      ...topics,
+      { id: topicId, user: -1, title: newTopic.title ?? '' },
+    ]);
   };
 
   return (
@@ -39,7 +45,7 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
         {id ? (
           <Topic id={parseInt(id)} updateSidebar={updateTopic} />
         ) : (
-          <EmptyTopic />
+          <EmptyTopic updateSidebar={updateTopic} />
         )}
       </main>
     </>
