@@ -10,12 +10,12 @@ import {
   postMessage,
   updateMessage,
 } from '../service/message';
-import { debounce, useDebounce } from '../debounce';
+import { debounce } from '../debounce';
 
 export const EmptyTopic = ({
-  updateSidebar,
+  updateNavigation,
 }: {
-  updateSidebar: (id: number, topic: Partial<responses['Topic']>) => void;
+  updateNavigation: (id: number, topic: Partial<responses['Topic']>) => void;
 }) => {
   const [title, setTitle] = useState('');
 
@@ -29,7 +29,7 @@ export const EmptyTopic = ({
       localStorage.setItem('pending-msg', text);
       route(`/${topicId}`);
 
-      updateSidebar(topicId, { title });
+      updateNavigation(topicId, { title });
     })();
   };
 
@@ -48,10 +48,10 @@ export const EmptyTopic = ({
 
 export const Topic = ({
   id,
-  updateSidebar,
+  updateNavigation,
 }: {
   id: number;
-  updateSidebar: (id: number, topic: Partial<responses['Topic']>) => void;
+  updateNavigation: (id: number, topic: Partial<responses['Topic']>) => void;
 }) => {
   const [title, setTitle] = useState('');
   const [messages, setMessages] = useState<responses['Message'][]>([]);
@@ -117,7 +117,7 @@ export const Topic = ({
 
   const updateTitle = debounce((newTitle: string) => {
     setTitle(newTitle);
-    updateSidebar(id, { title: newTitle });
+    updateNavigation(id, { title: newTitle });
     void updateTopic({ id, title: newTitle });
   }, 250);
 

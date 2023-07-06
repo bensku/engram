@@ -2,7 +2,7 @@ import { route } from 'preact-router';
 import { deleteTopic } from '../service/topic';
 import { responses } from '../types';
 
-export const SideBar = ({
+export const NavBar = ({
   topics,
   currentTopic,
 }: {

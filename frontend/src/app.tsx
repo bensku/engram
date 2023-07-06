@@ -3,7 +3,7 @@ import 'highlight.js/styles/stackoverflow-light.css';
 
 import { render } from 'preact';
 import { EmptyTopic, Topic } from './component/topic';
-import { SideBar } from './component/sidebar';
+import { NavBar } from './component/navbar';
 import Router, { RoutableProps } from 'preact-router';
 import './layout.css';
 import { useEffect, useState } from 'preact/hooks';
@@ -40,12 +40,12 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
 
   return (
     <>
-      <SideBar topics={topics} currentTopic={id ? parseInt(id) : -1} />
+      <NavBar topics={topics} currentTopic={id ? parseInt(id) : -1} />
       <main>
         {id ? (
-          <Topic id={parseInt(id)} updateSidebar={updateTopic} />
+          <Topic id={parseInt(id)} updateNavigation={updateTopic} />
         ) : (
-          <EmptyTopic updateSidebar={updateTopic} />
+          <EmptyTopic updateNavigation={updateTopic} />
         )}
       </main>
     </>
