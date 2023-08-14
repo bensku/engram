@@ -22,6 +22,7 @@ export class DbTopicStorage implements TopicStorage {
         .update(topic)
         .set({
           title: details.title,
+          engine: details.engine,
         })
         .where(eq(topic.id, details.id));
       return details.id;
@@ -35,6 +36,7 @@ export class DbTopicStorage implements TopicStorage {
           .values({
             title: details.title ?? '',
             user: details.user,
+            engine: details.engine ?? 'default',
           })
           .returning({ id: topic.id })
       )[0].id;

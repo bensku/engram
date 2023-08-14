@@ -24,12 +24,14 @@ export function openAICompletions(
     throw new Error('unimplemented');
     // return async function* () {};
   } else {
-    return async function* (context) {
+    return async function* (context, options) {
       const body: paths['/chat/completions']['post']['requestBody']['content']['application/json'] =
         {
           stream: true,
           model,
           messages: context.map(chatGptMessage),
+          temperature: options.temperature,
+          max_tokens: options.maxTokens,
         };
       const response = await fetch(`${API_URL}/chat/completions`, {
         method: 'POST',

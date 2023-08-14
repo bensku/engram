@@ -11,6 +11,7 @@ export const topic = pgTable('topic', {
   id: serial('id').primaryKey(),
   user: integer('user').notNull(),
   title: text('title').notNull(),
+  engine: text('engine').notNull(),
 });
 
 export const topicRelations = relations(topic, ({ many }) => ({

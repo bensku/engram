@@ -6,6 +6,7 @@ export type CompletionPart = typeof CompletionEnd | string;
 
 export type CompletionService = (
   context: Message[],
+  options: ModelOptions,
 ) => AsyncGenerator<CompletionPart, void, void>;
 
 const services: Record<string, CompletionService> = {};
@@ -26,4 +27,9 @@ export function completionsForModel(model: string): CompletionService {
     throw new Error(`model ${model} not found`);
   }
   return service;
+}
+
+export interface ModelOptions {
+  temperature?: number;
+  maxTokens?: number;
 }

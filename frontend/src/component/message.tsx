@@ -9,12 +9,15 @@ import rehypeHighlight from 'rehype-highlight/lib';
 export const Message = ({
   msg,
   replaceMsg,
+  engines,
 }: {
   msg: responses['Message'];
   replaceMsg: (id: number, msg: responses['Message'] | null) => void;
+  engines: Map<string, responses['Engine']>;
 }) => {
   const icon = msg.type == 'user' ? 'person' : 'robot';
-  const sender = msg.type == 'bot' ? msg.agent : 'you';
+  const sender =
+    msg.type == 'bot' ? engines.get(msg.agent)?.name ?? 'Unknown Bot' : 'You';
   const color = msg.type == 'user' ? 'indigo1' : '';
 
   return (
@@ -49,17 +52,24 @@ export const MessageList = ({
   messages,
   last,
   replaceMessage,
+  engines,
 }: {
   messages: responses['Message'][];
   last?: responses['Message'];
   replaceMessage: (id: number, msg: responses['Message'] | null) => void;
+  engines: Map<string, responses['Engine']>;
 }) => {
   return (
     <div class="message-list">
       {messages.map((msg) => (
-        <Message msg={msg} key={msg.id} replaceMsg={replaceMessage} />
+        <Message
+          msg={msg}
+          key={msg.id}
+          replaceMsg={replaceMessage}
+          engines={engines}
+        />
       ))}
-      {last && <Message msg={last} replaceMsg={() => null} />}
+      {last && <Message msg={last} replaceMsg={() => null} engines={engines} />}
     </div>
   );
 };

@@ -29,8 +29,10 @@ main {
   flex-direction: column;
 }
 
-h1 {
+.topic-title {
   flex-shrink: 0;
+
+  display: flex;
 }
 
 .message-list {
@@ -54,4 +56,9 @@ h1 {
 
 .send-message {
   left: -60px;
+}
+
+.topic-options {
+  width: 20em;
+  padding: 15px;
 }

@@ -44,8 +44,13 @@ export class TopicController extends Controller {
     @Request() req: RequestBody,
     @Body() params: Partial<Omit<Omit<Topic, 'id'>, 'user'>>,
   ): Promise<Topic> {
-    // Allow the client set title, but NOT user id or topic id
-    const topic = { title: '', ...params, user: req.user.id };
+    // Allow the client set title and engine, but NOT user id or topic id
+    const topic = {
+      title: '',
+      ...params,
+      user: req.user.id,
+      engine: params.engine ?? 'assistant',
+    };
     return { ...topic, id: await storage.save(topic) };
   }
 
@@ -59,7 +64,7 @@ export class TopicController extends Controller {
     if ((await storage.get(id))?.user != req.user.id) {
       throw new ForbiddenError();
     }
-    await storage.save({ id, title: params.title });
+    await storage.save({ id, title: params.title, engine: params.engine });
   }
 
   @Security('auth')

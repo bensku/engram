@@ -15,6 +15,11 @@ import { handleMessage } from '../chat/pipeline';
 import { ReplyStream } from '../chat/reply';
 import { Message, PostMessageRequest } from '../service/message';
 import { RequestBody } from '../types';
+import { DbTopicStorage } from '../service/impl/postgres';
+import { ForbiddenError } from '../auth';
+
+// TODO this really shouldn't be in this file, but oh well
+const storage = new DbTopicStorage();
 
 @Route('message')
 export class MessageController extends Controller {
@@ -35,10 +40,17 @@ export class MessageController extends Controller {
     @Path() topicId: number,
     @Body() message: PostMessageRequest,
   ): Promise<unknown> {
-    // TODO authz, topic owner check
+    const topic = await storage.get(topicId);
+    if (!topic) {
+      throw new Error(); // TODO not found
+    }
+    if (topic.user !== req.user.id) {
+      throw new ForbiddenError();
+    }
+
     // PassThrough is not valid return type; OpenAPI doesn't really handle SSE
     const stream = new ReplyStream();
-    void handleMessage(topicId, message, stream);
+    void handleMessage(topicId, message, stream, topic);
     return Promise.resolve(stream.nodeStream);
   }
 

@@ -2,11 +2,11 @@ export interface Topic {
   user: number;
   id: number;
   title: string;
+  engine: string;
 }
 
 export interface TopicOptions {
-  model: string;
-  prompt: string;
+  engine: string;
 }
 
 export interface TopicStorage {

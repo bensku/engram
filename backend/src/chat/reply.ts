@@ -2,6 +2,7 @@ import { PassThrough } from 'stream';
 import { CompletionEnd, completionsForModel } from '../service/completion';
 import { Message } from '../service/message';
 import { TopicOptions } from '../service/topic';
+import { ChatEngine, toModelOptions } from './engine';
 
 export class ReplyStream {
   #stream: PassThrough;
@@ -41,12 +42,12 @@ export class ReplyStream {
 export async function generateReply(
   out: ReplyStream,
   context: Message[],
-  options: TopicOptions,
+  engine: ChatEngine,
 ): Promise<Message> {
-  const completions = completionsForModel(options.model);
+  const completions = completionsForModel(engine.model);
   // Stream (but also collect) the final completion
   let text = '';
-  for await (const part of completions(context)) {
+  for await (const part of completions(context, toModelOptions(engine))) {
     if (part == CompletionEnd) {
       break;
     } else {
@@ -59,7 +60,7 @@ export async function generateReply(
     type: 'bot',
     id: -1,
     text,
-    agent: options.model,
+    agent: engine.id,
     time: Date.now(),
   };
 }

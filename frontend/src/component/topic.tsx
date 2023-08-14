@@ -13,23 +13,19 @@ import {
 import { debounce } from '../debounce';
 
 export const EmptyTopic = ({
-  updateNavigation,
+  updateTopic,
+  engines,
 }: {
-  updateNavigation: (id: number, topic: Partial<responses['Topic']>) => void;
+  updateTopic: (topic: Partial<responses['Topic']>) => Promise<number>;
+  engines: Map<string, responses['Engine']>;
 }) => {
   const [title, setTitle] = useState('');
 
   const newTopic = (text: string) => {
     void (async () => {
-      const topicId = (
-        await createTopic({
-          title,
-        })
-      ).data.id;
+      const topicId = await updateTopic({ title });
       localStorage.setItem('pending-msg', text);
       route(`/${topicId}`);
-
-      updateNavigation(topicId, { title });
     })();
   };
 
@@ -40,7 +36,11 @@ export const EmptyTopic = ({
         title={title}
         setTitle={setTitle}
       />
-      <MessageList messages={[]} replaceMessage={() => null} />
+      <MessageList
+        messages={[]}
+        replaceMessage={() => null}
+        engines={engines}
+      />
       <MessageForm onSubmit={newTopic} />
     </>
   );
@@ -48,10 +48,12 @@ export const EmptyTopic = ({
 
 export const Topic = ({
   id,
-  updateNavigation,
+  updateTopic,
+  engines,
 }: {
   id: number;
-  updateNavigation: (id: number, topic: Partial<responses['Topic']>) => void;
+  updateTopic: (topic: Partial<responses['Topic']>) => Promise<number>;
+  engines: Map<string, responses['Engine']>;
 }) => {
   const [title, setTitle] = useState('');
   const [messages, setMessages] = useState<responses['Message'][]>([]);
@@ -117,7 +119,6 @@ export const Topic = ({
 
   const updateTitle = debounce((newTitle: string) => {
     setTitle(newTitle);
-    updateNavigation(id, { title: newTitle });
     void updateTopic({ id, title: newTitle });
   }, 250);
 
@@ -148,6 +149,7 @@ export const Topic = ({
         messages={messages}
         last={last}
         replaceMessage={replaceMessage}
+        engines={engines}
       />
       <MessageForm onSubmit={post} />
     </>
@@ -164,7 +166,7 @@ const Title = ({
   setTitle: (title: string) => void;
 }) => {
   return (
-    <h1 class="field">
+    <h1 class="field topic-title">
       <input
         type="text"
         placeholder={placeholder}

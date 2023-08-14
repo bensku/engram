@@ -1,7 +1,6 @@
 import { DbMessageStorage } from '../service/impl/postgres';
 import { Message, MessageStorage } from '../service/message';
-import { TopicOptions } from '../service/topic';
-import { getPrompt } from './prompt';
+import { ChatEngine } from './engine';
 
 const storage: MessageStorage = new DbMessageStorage();
 
@@ -11,10 +10,10 @@ export async function fullContext(topicId: number): Promise<Message[]> {
 
 export async function topicContext(
   topicId: number,
-  options: TopicOptions,
+  engine: ChatEngine,
 ): Promise<Message[]> {
   let context = (await storage.get(topicId)) ?? [];
-  context = [...getPrompt(options.prompt), ...context];
+  context = [...engine.prompt, ...context];
   return context;
 }
 
