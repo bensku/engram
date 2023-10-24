@@ -3,6 +3,7 @@ import { CompletionEnd, completionsForModel } from '../service/completion';
 import { Message } from '../service/message';
 import { TopicOptions } from '../service/topic';
 import { ChatEngine, toModelOptions } from './engine';
+import { Fragment } from '@bensku/engram-shared/src/types';
 
 export class ReplyStream {
   #stream: PassThrough;
@@ -25,6 +26,14 @@ export class ReplyStream {
     const entry = {
       type: 'msg',
       data,
+    };
+    this.#stream.write(`data: ${JSON.stringify(entry)}\n\n`);
+  }
+
+  sendFragment(fragment: Fragment) {
+    const entry = {
+      type: 'fragment',
+      data: fragment,
     };
     this.#stream.write(`data: ${JSON.stringify(entry)}\n\n`);
   }

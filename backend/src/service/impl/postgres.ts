@@ -1,6 +1,6 @@
 import { db } from '../../db/core';
 import { message, topic } from '../../db/schema';
-import { asc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { Message, MessageStorage } from '../message';
 import { Topic, TopicStorage } from '../topic';
 
@@ -8,7 +8,7 @@ export class DbTopicStorage implements TopicStorage {
   async list(userId: number): Promise<Topic[]> {
     return await db.query.topic.findMany({
       where: eq(topic.user, userId),
-      orderBy: asc(topic.id),
+      orderBy: desc(topic.id),
     });
   }
   get(id: number): Promise<Topic | undefined> {
@@ -51,6 +51,7 @@ export class DbMessageStorage implements MessageStorage {
   async get(topicId: number): Promise<Message[] | null> {
     const messages = await db.query.message.findMany({
       where: eq(message.topic, topicId),
+      orderBy: asc(message.id),
     });
     return messages.map((msg) => {
       if (msg.source == 'user') {

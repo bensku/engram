@@ -1,5 +1,5 @@
 import { createRef } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import ReactTextareaAutosize from 'react-textarea-autosize';
 import { responses } from '../types';
 import { formatDate } from '../utils';
@@ -10,10 +10,12 @@ export const Message = ({
   msg,
   replaceMsg,
   engines,
+  isLastBotMsg,
 }: {
   msg: responses['Message'];
   replaceMsg: (id: number, msg: responses['Message'] | null) => void;
   engines: Map<string, responses['Engine']>;
+  isLastBotMsg: boolean;
 }) => {
   const icon = msg.type == 'user' ? 'person' : 'robot';
   const sender =
@@ -27,18 +29,18 @@ export const Message = ({
         <div class="max">
           {sender} at {formatDate(msg.time)}
         </div>
-        <button class="transparent circle">
-          <i>more_vert</i>
-          <div class="dropdown no-wrap">
-            <a>
-              <i>edit</i>
-              Edit
-            </a>
-            <a class="error-text" onClick={() => replaceMsg(msg.id, null)}>
-              <i>delete</i>
-              Delete
-            </a>
-          </div>
+        {isLastBotMsg ? (
+          <button class="transparent circle">
+            <i>refresh</i>
+            <div class="tooltip bottom">Regenerate</div>
+          </button>
+        ) : null}
+        <button
+          class="transparent circle"
+          onClick={() => replaceMsg(msg.id, null)}
+        >
+          <i>delete</i>
+          <div class="tooltip bottom">Delete</div>
         </button>
       </div>
       <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
@@ -59,17 +61,35 @@ export const MessageList = ({
   replaceMessage: (id: number, msg: responses['Message'] | null) => void;
   engines: Map<string, responses['Engine']>;
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // When messages change or page is entered, scroll down to latest message
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [messages, last]);
+
   return (
-    <div class="message-list">
-      {messages.map((msg) => (
+    <div class="message-list" ref={containerRef}>
+      {messages.map((msg, i) => (
         <Message
           msg={msg}
           key={msg.id}
           replaceMsg={replaceMessage}
           engines={engines}
+          isLastBotMsg={!last && i == messages.length - 1 && msg.type == 'bot'}
         />
       ))}
-      {last && <Message msg={last} replaceMsg={() => null} engines={engines} />}
+      {last && (
+        <Message
+          msg={last}
+          replaceMsg={() => null}
+          engines={engines}
+          isLastBotMsg={true}
+        />
+      )}
     </div>
   );
 };
@@ -91,6 +111,14 @@ export const MessageForm = ({
 
   const [height, setHeight] = useState(0);
 
+  // Submit if enter is pressed without shift
+  const handleEnter = (event: KeyboardEvent) => {
+    if (event.key == 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      submit();
+    }
+  };
+
   return (
     <>
       <div
@@ -106,6 +134,7 @@ export const MessageForm = ({
             minRows={2}
             maxRows={20}
             onHeightChange={setHeight}
+            onKeyDown={handleEnter}
           />
         </div>
         <button class="send-message min transparent circle" onClick={submit}>

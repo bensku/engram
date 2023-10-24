@@ -44,10 +44,8 @@ export class TopicController extends Controller {
     @Request() req: RequestBody,
     @Body() params: Partial<Omit<Omit<Topic, 'id'>, 'user'>>,
   ): Promise<Topic> {
-    // Allow the client set title and engine, but NOT user id or topic id
     const topic = {
-      title: '',
-      ...params,
+      title: params.title ?? '',
       user: req.user.id,
       engine: params.engine ?? 'assistant',
     };

@@ -106,6 +106,11 @@ export const Topic = ({
         } else if (part.type == 'msg') {
           msg.text += part.data;
           setLast({ ...msg });
+        } else if (part.type == 'fragment') {
+          // TODO proper fragment handling
+          if (part.data.type == 'title') {
+            setTitle(part.data.title);
+          }
         } else if (part.type == 'end') {
           // Don't refer to last, it has not been updated
           msg.id = part.id;

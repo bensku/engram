@@ -37,8 +37,6 @@ main {
 
 .message-list {
   flex-grow: 1;
-  padding-right: 2em;
-  padding-left: 1em;
   overflow-y: scroll;
 }
 
@@ -61,4 +59,12 @@ main {
 .topic-options {
   width: 20em;
   padding: 15px;
+}
+
+textarea {
+  padding: 10px !important;
+}
+
+ul, ol {
+  list-style-position: inside;
 }

@@ -69,13 +69,13 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
         })
       ).data;
       setTopics([
-        ...topics,
         {
           id: details.id,
           user: details.user,
           title: newTopic.title ?? '',
           engine: newTopic.engine ?? 'default',
         },
+        ...topics,
       ]);
       return details.id;
     }

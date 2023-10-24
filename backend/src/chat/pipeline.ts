@@ -2,7 +2,9 @@ import { Message, PostMessageRequest } from '../service/message';
 import { TopicOptions } from '../service/topic';
 import { appendContext, topicContext } from './context';
 import { getEngine } from './engine';
+import { simplePrompt } from './prompt';
 import { generateReply, ReplyStream } from './reply';
+import { generateTitle, updateTitle } from './title-gen';
 
 export async function handleMessage(
   topicId: number,
@@ -30,6 +32,15 @@ export async function handleMessage(
 
   // Stream reply back to user (and save it once it has been completed)
   const reply = await generateReply(stream, context, engine);
+  context.push(reply);
   reply.id = await appendContext(topicId, reply);
+
+  // If the topic lacks a title, give it AI-generated one and stream that back too
+  if (!options.title) {
+    const title = await generateTitle(context);
+    stream.sendFragment({ type: 'title', title });
+    await updateTitle(topicId, title);
+  }
+
   stream.close(reply.id);
 }

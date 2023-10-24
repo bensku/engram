@@ -9,6 +9,11 @@ export type CompletionService = (
   options: ModelOptions,
 ) => AsyncGenerator<CompletionPart, void, void>;
 
+export type BatchCompletionService = (
+  context: Message[],
+  options: ModelOptions,
+) => Promise<string>;
+
 const services: Record<string, CompletionService> = {};
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -27,6 +32,23 @@ export function completionsForModel(model: string): CompletionService {
     throw new Error(`model ${model} not found`);
   }
   return service;
+}
+
+export function batchCompletionsForModel(
+  model: string,
+): BatchCompletionService {
+  const completions = completionsForModel(model);
+  return async (context, options) => {
+    let text = '';
+    for await (const part of completions(context, options)) {
+      if (part == CompletionEnd) {
+        break;
+      } else {
+        text += part;
+      }
+    }
+    return text;
+  };
 }
 
 export interface ModelOptions {

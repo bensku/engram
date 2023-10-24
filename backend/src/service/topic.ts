@@ -7,6 +7,7 @@ export interface Topic {
 
 export interface TopicOptions {
   engine: string;
+  title: string;
 }
 
 export interface TopicStorage {

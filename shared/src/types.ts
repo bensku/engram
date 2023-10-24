@@ -18,6 +18,11 @@ interface MessagePart extends CompletionPartBase {
   data: string;
 }
 
+interface FragmentPart extends CompletionPartBase {
+  type: 'fragment';
+  data: Fragment;
+}
+
 interface EndPart extends CompletionPartBase {
   type: 'end';
 
@@ -28,4 +33,15 @@ interface EndPart extends CompletionPartBase {
   id: number;
 }
 
-export type CompletionPart = StartPart | MessagePart | EndPart;
+export type CompletionPart = StartPart | MessagePart | FragmentPart | EndPart;
+
+interface FragmentBase {
+  type: string;
+}
+
+interface TitleFragment extends FragmentBase {
+  type: 'title';
+  title: string;
+}
+
+export type Fragment = TitleFragment;
