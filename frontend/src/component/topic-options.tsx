@@ -8,13 +8,45 @@ export const TopicOptions = ({
   setEngine: (id: string) => void;
 }) => {
   return (
-    <div class="topic-options">
-      <SelectField
-        name="Chat engine"
+    <article class="max topic-options">
+      <h6 class="center-align">Topic options</h6>
+      <EngineSelection
         options={availableEngines}
         value={engine}
         onChange={setEngine}
       />
+      {/* <SelectField
+        name="Chat engine"
+        options={availableEngines}
+        value={engine}
+        onChange={setEngine}
+      /> */}
+    </article>
+  );
+};
+
+const EngineSelection = ({
+  options,
+  value,
+  onChange,
+}: {
+  options: ChatEngine[];
+  value: string;
+  onChange: (newValue: string) => void;
+}) => {
+  return (
+    <div class="field vertical">
+      {options.map((opt) => (
+        <label class="radio" key={opt.id}>
+          <input
+            type="radio"
+            name="engine"
+            checked={opt.id == value ? true : undefined}
+            onClick={() => onChange(opt.id)}
+          />
+          <span>{opt.name}</span>
+        </label>
+      ))}
     </div>
   );
 };

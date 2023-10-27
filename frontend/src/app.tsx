@@ -19,9 +19,9 @@ import { TopicOptions } from './component/topic-options';
 import { listEngines } from './service/engine';
 
 const App = ({ id }: { id?: string } & RoutableProps) => {
-  const currentTopic = id ? parseInt(id) : -1;
+  const currentTopic = id ? parseInt(id) : undefined;
   const [topics, setTopics] = useState<responses['Topic'][]>([]);
-  const [engines, setEngines] = useState<responses['Engine'][]>([]);
+  const [engines, setEngines] = useState<responses['ChatEngine'][]>([]);
   const [currentEngine, setCurrentEngine] = useState('default');
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
   }, []);
 
   useEffect(() => {
-    if (currentTopic === -1) {
+    if (currentTopic === undefined) {
       setCurrentEngine('default');
     } else {
       void (async () => {
@@ -74,6 +74,7 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
           user: details.user,
           title: newTopic.title ?? '',
           engine: newTopic.engine ?? 'default',
+          options: newTopic.options ?? [],
         },
         ...topics,
       ]);
@@ -83,7 +84,9 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
 
   const updateEngine = (id: string) => {
     setCurrentEngine(id);
-    void _updateTopic({ id: currentTopic, engine: id });
+    if (currentTopic !== undefined) {
+      void _updateTopic({ id: currentTopic, engine: id });
+    }
   };
 
   const _deleteTopic = (id: number) => {

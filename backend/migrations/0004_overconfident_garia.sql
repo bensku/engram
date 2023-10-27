@@ -1,0 +1,1 @@
+ALTER TABLE "topic" ADD COLUMN "options" jsonb NOT NULL;

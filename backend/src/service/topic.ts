@@ -1,13 +1,14 @@
-export interface Topic {
+import { EngineOption } from '../chat/options';
+
+export interface Topic extends TopicOptions {
   user: number;
   id: number;
-  title: string;
-  engine: string;
 }
 
 export interface TopicOptions {
   engine: string;
   title: string;
+  options: EngineOption[];
 }
 
 export interface TopicStorage {

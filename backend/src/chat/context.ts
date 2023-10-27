@@ -1,6 +1,7 @@
 import { DbMessageStorage } from '../service/impl/postgres';
 import { Message, MessageStorage } from '../service/message';
 import { ChatEngine } from './engine';
+import { PROMPT } from './options';
 
 const storage: MessageStorage = new DbMessageStorage();
 
@@ -13,7 +14,7 @@ export async function topicContext(
   engine: ChatEngine,
 ): Promise<Message[]> {
   let context = (await storage.get(topicId)) ?? [];
-  context = [...engine.prompt, ...context];
+  context = [...PROMPT.getOrThrow(engine, []), ...context];
   return context;
 }
 

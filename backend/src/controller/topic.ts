@@ -12,7 +12,7 @@ import {
 } from 'tsoa';
 import { ForbiddenError } from '../auth';
 import { DbTopicStorage } from '../service/impl/postgres';
-import { Topic } from '../service/topic';
+import { Topic, TopicOptions } from '../service/topic';
 import { RequestBody } from '../types';
 
 const storage = new DbTopicStorage();
@@ -42,12 +42,13 @@ export class TopicController extends Controller {
   @Post('')
   async newTopic(
     @Request() req: RequestBody,
-    @Body() params: Partial<Omit<Omit<Topic, 'id'>, 'user'>>,
+    @Body() params: Partial<TopicOptions>,
   ): Promise<Topic> {
     const topic = {
       title: params.title ?? '',
       user: req.user.id,
       engine: params.engine ?? 'assistant',
+      options: params.options ?? [],
     };
     return { ...topic, id: await storage.save(topic) };
   }

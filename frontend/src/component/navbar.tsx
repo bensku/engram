@@ -8,7 +8,7 @@ export const NavBar = ({
   deleteTopic,
 }: {
   topics: responses['Topic'][];
-  currentTopic: number;
+  currentTopic: number | undefined;
   deleteTopic: (id: number) => void;
 }) => {
   return (
@@ -64,7 +64,7 @@ const TopicList = ({
   deleteTopic,
 }: {
   topics: responses['Topic'][];
-  currentTopic: number;
+  currentTopic: number | undefined;
   deleteTopic: (id: number) => void;
 }) => {
   // TODO highlight current topic

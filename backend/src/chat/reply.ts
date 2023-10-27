@@ -4,6 +4,7 @@ import { Message } from '../service/message';
 import { TopicOptions } from '../service/topic';
 import { ChatEngine, toModelOptions } from './engine';
 import { Fragment } from '@bensku/engram-shared/src/types';
+import { MODEL } from './options';
 
 export class ReplyStream {
   #stream: PassThrough;
@@ -52,11 +53,17 @@ export async function generateReply(
   out: ReplyStream,
   context: Message[],
   engine: ChatEngine,
+  topic: TopicOptions,
 ): Promise<Message> {
-  const completions = completionsForModel(engine.model);
+  const completions = completionsForModel(
+    MODEL.getOrThrow(engine, topic.options),
+  );
   // Stream (but also collect) the final completion
   let text = '';
-  for await (const part of completions(context, toModelOptions(engine))) {
+  for await (const part of completions(
+    context,
+    toModelOptions(engine, topic),
+  )) {
     if (part == CompletionEnd) {
       break;
     } else {

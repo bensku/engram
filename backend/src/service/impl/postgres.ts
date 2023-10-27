@@ -37,6 +37,7 @@ export class DbTopicStorage implements TopicStorage {
             title: details.title ?? '',
             user: details.user,
             engine: details.engine ?? 'default',
+            options: details.options ?? [],
           })
           .returning({ id: topic.id })
       )[0].id;
