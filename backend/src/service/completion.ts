@@ -1,3 +1,4 @@
+import { bedrockCompletions } from './impl/bedrock';
 import { openAICompletions } from './impl/openai';
 import { Message } from './message';
 
@@ -24,6 +25,21 @@ if (OPENAI_API_KEY) {
     'gpt-3.5-turbo',
   );
   services['openai:gpt-4'] = openAICompletions(OPENAI_API_KEY, 'chat', 'gpt-4');
+}
+
+if (process.env.AWS_ACCESS_KEY_ID) {
+  services['bedrock:claude-instant-v1'] = bedrockCompletions(
+    'anthropic.claude-instant-v1',
+    'claude',
+  );
+  services['bedrock:claude-v2'] = bedrockCompletions(
+    'anthropic.claude-v2',
+    'claude',
+  );
+  services['bedrock:cohere-command'] = bedrockCompletions(
+    'cohere.command-text-v14',
+    'cohere',
+  );
 }
 
 export function completionsForModel(model: string): CompletionService {
