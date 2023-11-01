@@ -1,4 +1,6 @@
-import { currentTopic, engines } from '../state';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { debounce } from '../debounce';
+import { currentTopic, engineMap, engines } from '../state';
 import { responses } from '../types';
 
 export const TopicOptions = ({
@@ -9,6 +11,10 @@ export const TopicOptions = ({
     updateServer: 'if-exists',
   ) => Promise<number>;
 }) => {
+  const engineOpts = engineMap.value.get(
+    currentTopic.value.engine ?? 'default',
+  )?.options;
+  const overrides = currentTopic.value.options ?? {};
   return (
     <article class="max topic-options">
       <h6 class="center-align">Topic options</h6>
@@ -19,12 +25,24 @@ export const TopicOptions = ({
           void updateTopic({ engine: newEngine }, 'if-exists')
         }
       />
-      {/* <SelectField
-        name="Chat engine"
-        options={availableEngines}
-        value={engine}
-        onChange={setEngine}
-      /> */}
+      {engineOpts?.map((opt) => (
+        <EngineOption
+          key={opt.id}
+          option={opt}
+          value={overrides[opt.id] ?? opt.defaultValue}
+          setValue={(value) =>
+            void updateTopic(
+              {
+                options: {
+                  ...currentTopic.value.options,
+                  [opt.id]: value,
+                } as Record<string, unknown>,
+              },
+              'if-exists',
+            )
+          }
+        />
+      ))}
     </article>
   );
 };
@@ -39,20 +57,59 @@ const EngineSelection = ({
   onChange: (newValue: string) => void;
 }) => {
   return (
-    <div class="field vertical">
+    <div class="grid no-space">
       {options.map((opt) => (
-        <label class="radio" key={opt.id}>
-          <input
-            type="radio"
-            name="engine"
-            checked={opt.id == value ? true : undefined}
-            onClick={() => onChange(opt.id)}
-          />
-          <span>{opt.name}</span>
-        </label>
+        <a
+          class={'no-margin s6 chip' + (opt.id != value ? ' border' : ' fill')}
+          key={opt.id}
+          onClick={() => onChange(opt.id)}
+        >
+          {opt.name}
+        </a>
       ))}
     </div>
   );
+};
+
+const EngineOption = ({
+  option,
+  value,
+  setValue,
+}: {
+  option: responses['EngineOption'];
+  value: unknown;
+  setValue: (value: unknown) => void;
+}) => {
+  if (option.type == 'select') {
+    return (
+      <SelectField
+        name={option.title}
+        options={option.choices ?? []}
+        value={value as string}
+        onChange={setValue}
+      />
+    );
+  } else if (option.type == 'slider') {
+    return (
+      <SliderField
+        name={option.title}
+        min={option.start ?? 0}
+        max={option.end ?? 1}
+        value={value as number}
+        onChange={setValue}
+      />
+    );
+  } else if (option.type == 'toggle') {
+    return (
+      <ToggleField
+        name={option.title}
+        value={value as boolean}
+        onChange={setValue}
+      />
+    );
+  } else {
+    return null;
+  }
 };
 
 const SelectField = ({
@@ -62,7 +119,7 @@ const SelectField = ({
   onChange,
 }: {
   name: string;
-  options: ChatEngine[];
+  options: { title: string; value: string }[];
   value: string;
   onChange: (newValue: string) => void;
 }) => {
@@ -76,17 +133,94 @@ const SelectField = ({
       >
         {options.map((opt) => (
           <option
-            key={opt.id}
-            value={opt.id}
-            selected={opt.id == value ? true : undefined}
+            key={opt.value}
+            value={opt.value}
+            selected={opt.value == value ? true : undefined}
           >
-            {opt.name}
+            {opt.title}
           </option>
         ))}
       </select>
       <label class="active">{name}</label>
       <i>arrow_drop_down</i>
     </div>
+  );
+};
+
+const debounceUpdate = debounce(
+  (onChange: (newValue: number) => void, newValue: number) => {
+    onChange(newValue);
+  },
+  200,
+);
+
+const SliderField = ({
+  name,
+  min,
+  max,
+  value,
+  onChange,
+}: {
+  name: string;
+  min: number;
+  max: number;
+  value: number;
+  onChange: (newValue: number) => void;
+}) => {
+  const [currentValue, setCurrentValue] = useState(value);
+
+  const fieldRef = useRef<HTMLInputElement>(null);
+
+  const updateValue = (value: number) => {
+    debounceUpdate(onChange, value);
+    setCurrentValue(value);
+  };
+
+  return (
+    <div>
+      <label>{name}</label>
+      <div class="field middle-align no-margin">
+        <label class="slider">
+          <input
+            class="no-margin"
+            type="range"
+            value={currentValue}
+            min={min}
+            max={max}
+            step={0.01}
+            onChange={(event) => updateValue(parseFloat(event.target.value))}
+          />
+          <span></span>
+        </label>
+        <input
+          class="no-padding"
+          style="width: 3em; border-block-end: unset;"
+          type="text"
+          inputmode="number"
+          pattern="[0-9]*"
+          value={`${currentValue}`}
+          onBlur={() => updateValue(parseFloat(fieldRef.current?.value ?? '0'))}
+          ref={fieldRef}
+        />
+      </div>
+    </div>
+  );
+};
+
+const ToggleField = ({
+  name,
+  value,
+  onChange,
+}: {
+  name: string;
+  value: boolean;
+  onChange: (newValue: boolean) => void;
+}) => {
+  return (
+    <label class="checkbox">
+      <input type="checkbox" onClick={() => onChange(!value)} />
+      <span>{name}</span>
+    </label>
   );
 };
 

@@ -23,6 +23,7 @@ export class DbTopicStorage implements TopicStorage {
         .set({
           title: details.title,
           engine: details.engine,
+          options: details.options,
         })
         .where(eq(topic.id, details.id));
       return details.id;

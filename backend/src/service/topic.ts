@@ -6,7 +6,7 @@ export interface Topic extends TopicOptions {
 export interface TopicOptions {
   engine: string;
   title: string;
-  options: Record<string, unknown>;
+  options: { [key: string]: unknown };
 }
 
 export interface TopicStorage {

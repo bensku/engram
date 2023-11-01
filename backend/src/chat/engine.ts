@@ -1,6 +1,12 @@
 import { ModelOptions } from '../service/completion';
 import { TopicOptions } from '../service/topic';
-import { EngineOption, MODEL, PROMPT, TEMPERATURE } from './options';
+import {
+  EngineOption,
+  MODEL,
+  OptionType,
+  PROMPT,
+  TEMPERATURE,
+} from './options';
 import { simplePrompt } from './prompt';
 
 export interface ChatEngine {
@@ -50,6 +56,12 @@ function registerEngine(id: string, name: string, ...options: EngineOption[]) {
   ENGINE_LIST.push(engine);
 }
 
+const WOLFRAM_ALPHA = new OptionType(
+  'toggle',
+  'wolfram-alpha',
+  'Enable Wolfram Alpha',
+);
+
 registerEngine(
   'default',
   'Default',
@@ -64,11 +76,15 @@ registerEngine(
   TEMPERATURE.create({
     defaultValue: 0.3,
     start: 0,
-    end: 1,
+    end: 1.5,
     userEditable: true,
   }),
   PROMPT.create({
     defaultValue: simplePrompt('You are a helpful AI assistant.'),
+  }),
+  WOLFRAM_ALPHA.create({
+    defaultValue: false,
+    userEditable: true,
   }),
 );
 
@@ -85,5 +101,19 @@ registerEngine(
     defaultValue: simplePrompt(
       'You are Pirate, a helpful little pirate that loves traveling around the world. Be sure to speak like pirate!',
     ),
+  }),
+);
+
+registerEngine(
+  'simple',
+  'Simple',
+  MODEL.create({
+    defaultValue: 'openai:gpt-3.5-turbo',
+  }),
+  TEMPERATURE.create({
+    defaultValue: 0.8,
+  }),
+  PROMPT.create({
+    defaultValue: simplePrompt('You are a helpful AI assistant.'),
   }),
 );

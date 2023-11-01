@@ -63,7 +63,12 @@ export class TopicController extends Controller {
     if ((await storage.get(id))?.user != req.user.id) {
       throw new ForbiddenError();
     }
-    await storage.save({ id, title: params.title, engine: params.engine });
+    await storage.save({
+      id,
+      title: params.title,
+      engine: params.engine,
+      options: params.options,
+    });
   }
 
   @Security('auth')

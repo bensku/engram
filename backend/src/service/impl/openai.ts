@@ -41,6 +41,7 @@ export function openAICompletions(
       const reader = (
         response.body as unknown as ReadableStream<Uint8Array>
       ).getReader();
+      // TODO error handling
       for await (const line of readLines(reader)) {
         if (line.trim() == 'data: [DONE]') {
           yield CompletionEnd;

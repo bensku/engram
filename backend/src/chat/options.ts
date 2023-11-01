@@ -4,6 +4,7 @@ import { ChatEngine } from './engine';
 interface BaseEngineOption<T> {
   id: string;
   type: string;
+  title: string;
   defaultValue: T;
   userEditable?: boolean;
 }
@@ -35,12 +36,17 @@ export type EngineOption =
   | SliderOption;
 
 export class OptionType<T extends EngineOption> {
-  constructor(private type: T['type'], private id: string) {}
+  constructor(
+    private type: T['type'],
+    private id: string,
+    private title: string,
+  ) {}
 
-  create(props: Omit<Omit<T, 'id'>, 'type'>): T {
+  create(props: Omit<Omit<Omit<T, 'id'>, 'type'>, 'title'>): T {
     return {
       id: this.id,
       type: this.type,
+      title: this.title,
       ...props,
     } as T;
   }
@@ -80,14 +86,20 @@ export class OptionType<T extends EngineOption> {
   }
 }
 
-export const MODEL = new OptionType<SelectOption>('select', 'model');
+export const MODEL = new OptionType<SelectOption>(
+  'select',
+  'model',
+  'Chat model',
+);
 
 export const PROMPT = new OptionType<UnknownOption<Message[]>>(
   'unknown',
   'prompt',
+  'Prompt',
 );
 
 export const TEMPERATURE = new OptionType<SliderOption>(
   'slider',
   'temperature',
+  'Temperature',
 );
