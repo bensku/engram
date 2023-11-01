@@ -47,8 +47,8 @@ export class TopicController extends Controller {
     const topic = {
       title: params.title ?? '',
       user: req.user.id,
-      engine: params.engine ?? 'assistant',
-      options: params.options ?? [],
+      engine: params.engine ?? 'default',
+      options: params.options ?? {},
     };
     return { ...topic, id: await storage.save(topic) };
   }

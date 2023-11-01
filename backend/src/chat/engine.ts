@@ -1,6 +1,6 @@
 import { ModelOptions } from '../service/completion';
 import { TopicOptions } from '../service/topic';
-import { EngineOption, MODEL, TEMPERATURE } from './options';
+import { EngineOption, MODEL, PROMPT, TEMPERATURE } from './options';
 import { simplePrompt } from './prompt';
 
 export interface ChatEngine {
@@ -40,7 +40,7 @@ export function toModelOptions(
   options: TopicOptions,
 ): ModelOptions {
   return {
-    temperature: TEMPERATURE.get(engine, options.options),
+    temperature: TEMPERATURE.getOrThrow(engine, options.options),
   };
 }
 
@@ -61,6 +61,15 @@ registerEngine(
     ],
     userEditable: true,
   }),
+  TEMPERATURE.create({
+    defaultValue: 0.3,
+    start: 0,
+    end: 1,
+    userEditable: true,
+  }),
+  PROMPT.create({
+    defaultValue: simplePrompt('You are a helpful AI assistant.'),
+  }),
 );
 
 registerEngine(
@@ -68,7 +77,13 @@ registerEngine(
   'Pirate',
   MODEL.create({
     defaultValue: 'openai:gpt-3.5-turbo',
-    choices: [{ value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5 (default)' }],
-    userEditable: true,
+  }),
+  TEMPERATURE.create({
+    defaultValue: 0.8,
+  }),
+  PROMPT.create({
+    defaultValue: simplePrompt(
+      'You are Pirate, a helpful little pirate that loves traveling around the world. Be sure to speak like pirate!',
+    ),
   }),
 );

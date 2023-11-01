@@ -1,5 +1,3 @@
-import { EngineOption } from '../chat/options';
-
 export interface Topic extends TopicOptions {
   user: number;
   id: number;
@@ -8,7 +6,7 @@ export interface Topic extends TopicOptions {
 export interface TopicOptions {
   engine: string;
   title: string;
-  options: EngineOption[];
+  options: Record<string, unknown>;
 }
 
 export interface TopicStorage {

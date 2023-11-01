@@ -17,43 +17,49 @@ import {
 import { responses } from './types';
 import { TopicOptions } from './component/topic-options';
 import { listEngines } from './service/engine';
+import { currentTopic, engineMap, engines } from './state';
 
 const App = ({ id }: { id?: string } & RoutableProps) => {
-  const currentTopic = id ? parseInt(id) : undefined;
   const [topics, setTopics] = useState<responses['Topic'][]>([]);
-  const [engines, setEngines] = useState<responses['ChatEngine'][]>([]);
-  const [currentEngine, setCurrentEngine] = useState('default');
 
   useEffect(() => {
     void (async () => {
       const topicsPromise = listTopics({});
       const enginesPromise = listEngines({});
       setTopics((await topicsPromise).data);
-      setEngines((await enginesPromise).data);
+      engines.value = (await enginesPromise).data;
+      const map = new Map<string, responses['ChatEngine']>();
+      for (const engine of engines.value) {
+        map.set(engine.id, engine);
+      }
+      engineMap.value = map;
     })();
   }, []);
 
   useEffect(() => {
-    if (currentTopic === undefined) {
-      setCurrentEngine('default');
-    } else {
+    if (id !== undefined) {
       void (async () => {
-        // TODO do not issue getTopic call twice
-        setCurrentEngine((await getTopic({ id: currentTopic })).data.engine);
+        currentTopic.value = (await getTopic({ id: parseInt(id) })).data;
       })();
+    } else {
+      currentTopic.value = {};
     }
   }, [id]);
 
   const _updateTopic = async (
     newTopic: Partial<responses['Topic']>,
+    updateServer: 'always' | 'if-exists' | 'never' = 'always',
   ): Promise<number> => {
-    const topicId = newTopic.id;
+    currentTopic.value = { ...currentTopic.value, ...newTopic };
+    const topicId = currentTopic.value.id;
 
     // Update existing topic...
     if (topicId !== undefined) {
       for (let i = 0; i < topics.length; i++) {
         if (topics[i].id == topicId) {
-          await updateTopic({ id: topicId, ...newTopic });
+          if (updateServer != 'never') {
+            await updateTopic({ id: topicId, ...newTopic });
+          }
           topics.splice(i, 1, { ...topics[i], ...newTopic });
           setTopics([...topics]);
           return topicId;
@@ -62,30 +68,21 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
       throw new Error();
     } else {
       // OR create a new topic
-      const details = (
-        await createTopic({
-          title: newTopic.title,
-          engine: currentEngine,
-        })
-      ).data;
+      if (updateServer != 'always') {
+        return -1; // Do not create a topic yet; this is probable someone changing options
+      }
+      const details = (await createTopic(currentTopic.value)).data;
       setTopics([
         {
           id: details.id,
           user: details.user,
           title: newTopic.title ?? '',
           engine: newTopic.engine ?? 'default',
-          options: newTopic.options ?? [],
+          options: newTopic.options ?? {},
         },
         ...topics,
       ]);
       return details.id;
-    }
-  };
-
-  const updateEngine = (id: string) => {
-    setCurrentEngine(id);
-    if (currentTopic !== undefined) {
-      void _updateTopic({ id: currentTopic, engine: id });
     }
   };
 
@@ -99,34 +96,17 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
     }
   };
 
-  const engineMap = new Map();
-  for (const engine of engines) {
-    engineMap.set(engine.id, engine);
-  }
-
   return (
     <>
-      <NavBar
-        topics={topics}
-        currentTopic={currentTopic}
-        deleteTopic={_deleteTopic}
-      />
+      <NavBar topics={topics} deleteTopic={_deleteTopic} />
       <main>
         {id ? (
-          <Topic
-            id={parseInt(id)}
-            updateTopic={_updateTopic}
-            engines={engineMap}
-          />
+          <Topic id={parseInt(id)} updateTopic={_updateTopic} />
         ) : (
-          <EmptyTopic updateTopic={_updateTopic} engines={engineMap} />
+          <EmptyTopic updateTopic={_updateTopic} />
         )}
       </main>
-      <TopicOptions
-        availableEngines={engines}
-        setEngine={updateEngine}
-        engine={currentEngine}
-      />
+      <TopicOptions updateTopic={_updateTopic} />
     </>
   );
 };

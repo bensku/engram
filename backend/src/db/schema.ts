@@ -7,7 +7,6 @@ import {
   serial,
   text,
 } from 'drizzle-orm/pg-core';
-import { EngineOption } from '../chat/options';
 
 export const user = pgTable('user', {
   id: serial('id').primaryKey(),
@@ -20,7 +19,7 @@ export const topic = pgTable('topic', {
   user: integer('user').notNull(),
   title: text('title').notNull(),
   engine: text('engine').notNull(),
-  options: jsonb('options').notNull().$type<EngineOption[]>(),
+  options: jsonb('options').notNull().$type<Record<string, unknown>>(),
 });
 
 export const topicRelations = relations(topic, ({ many }) => ({

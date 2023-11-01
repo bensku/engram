@@ -5,17 +5,17 @@ interface BaseEngineOption<T> {
   id: string;
   type: string;
   defaultValue: T;
-  userEditable: boolean;
+  userEditable?: boolean;
 }
 
 interface UnknownOption<T> extends BaseEngineOption<T> {
   type: 'unknown';
-  userEditable: false;
+  userEditable?: false;
 }
 
 interface SelectOption extends BaseEngineOption<string> {
   type: 'select';
-  choices: { value: string; title: string }[];
+  choices?: { value: string; title: string }[];
 }
 
 interface ToggleOption extends BaseEngineOption<boolean> {
@@ -24,8 +24,8 @@ interface ToggleOption extends BaseEngineOption<boolean> {
 
 interface SliderOption extends BaseEngineOption<number> {
   type: 'slider';
-  start: number;
-  end: number;
+  start?: number;
+  end?: number;
 }
 
 export type EngineOption =
@@ -47,15 +47,22 @@ export class OptionType<T extends EngineOption> {
 
   get(
     engine: ChatEngine,
-    overrides: EngineOption[],
+    overrides: Record<string, unknown>,
   ): T['defaultValue'] | undefined {
-    return (this.findOption(overrides, this.id) ??
-      this.findOption(engine.options, this.id)) as
-      | T['defaultValue']
-      | undefined;
+    const option = this.findOption(engine.options, this.id);
+    if (!option) {
+      return;
+    }
+    if (option.userEditable) {
+      return (overrides[this.id] as T['defaultValue']) ?? option.defaultValue;
+    }
+    return option.defaultValue;
   }
 
-  getOrThrow(engine: ChatEngine, overrides: EngineOption[]): T['defaultValue'] {
+  getOrThrow(
+    engine: ChatEngine,
+    overrides: Record<string, unknown>,
+  ): T['defaultValue'] {
     const opt = this.get(engine, overrides);
     if (!opt) {
       throw new Error(`missing mandatory option ${this.id}`);

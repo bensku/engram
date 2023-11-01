@@ -1,19 +1,23 @@
+import { currentTopic, engines } from '../state';
+import { responses } from '../types';
+
 export const TopicOptions = ({
-  availableEngines,
-  engine,
-  setEngine,
+  updateTopic,
 }: {
-  availableEngines: ChatEngine[];
-  engine: string;
-  setEngine: (id: string) => void;
+  updateTopic: (
+    topic: Partial<responses['Topic']>,
+    updateServer: 'if-exists',
+  ) => Promise<number>;
 }) => {
   return (
     <article class="max topic-options">
       <h6 class="center-align">Topic options</h6>
       <EngineSelection
-        options={availableEngines}
-        value={engine}
-        onChange={setEngine}
+        options={engines.value}
+        value={currentTopic.value.engine ?? 'default'}
+        onChange={(newEngine) =>
+          void updateTopic({ engine: newEngine }, 'if-exists')
+        }
       />
       {/* <SelectField
         name="Chat engine"

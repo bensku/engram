@@ -5,21 +5,22 @@ import { responses } from '../types';
 import { formatDate } from '../utils';
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown';
 import rehypeHighlight from 'rehype-highlight/lib';
+import { engineMap } from '../state';
 
 export const Message = ({
   msg,
   replaceMsg,
-  engines,
   isLastBotMsg,
 }: {
   msg: responses['Message'];
   replaceMsg: (id: number, msg: responses['Message'] | null) => void;
-  engines: Map<string, responses['Engine']>;
   isLastBotMsg: boolean;
 }) => {
   const icon = msg.type == 'user' ? 'person' : 'robot';
   const sender =
-    msg.type == 'bot' ? engines.get(msg.agent)?.name ?? 'Unknown Bot' : 'You';
+    msg.type == 'bot'
+      ? engineMap.value.get(msg.agent)?.name ?? 'Unknown Bot'
+      : 'You';
   const color = msg.type == 'user' ? 'indigo1' : '';
 
   return (
@@ -54,12 +55,10 @@ export const MessageList = ({
   messages,
   last,
   replaceMessage,
-  engines,
 }: {
   messages: responses['Message'][];
   last?: responses['Message'];
   replaceMessage: (id: number, msg: responses['Message'] | null) => void;
-  engines: Map<string, responses['Engine']>;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -78,17 +77,11 @@ export const MessageList = ({
           msg={msg}
           key={msg.id}
           replaceMsg={replaceMessage}
-          engines={engines}
           isLastBotMsg={!last && i == messages.length - 1 && msg.type == 'bot'}
         />
       ))}
       {last && (
-        <Message
-          msg={last}
-          replaceMsg={() => null}
-          engines={engines}
-          isLastBotMsg={true}
-        />
+        <Message msg={last} replaceMsg={() => null} isLastBotMsg={true} />
       )}
     </div>
   );

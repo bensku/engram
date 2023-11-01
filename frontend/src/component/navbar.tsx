@@ -1,25 +1,20 @@
 import { route } from 'preact-router';
 import { deleteTopic } from '../service/topic';
 import { responses } from '../types';
+import { currentTopic } from '../state';
 
 export const NavBar = ({
   topics,
-  currentTopic,
   deleteTopic,
 }: {
   topics: responses['Topic'][];
-  currentTopic: number | undefined;
   deleteTopic: (id: number) => void;
 }) => {
   return (
     <nav class="small-padding surface-variant">
       <UserCard />
       <NewTopicButton />
-      <TopicList
-        topics={topics}
-        currentTopic={currentTopic}
-        deleteTopic={deleteTopic}
-      />
+      <TopicList topics={topics} deleteTopic={deleteTopic} />
     </nav>
   );
 };
@@ -60,11 +55,9 @@ const NewTopicButton = () => {
 
 const TopicList = ({
   topics,
-  currentTopic,
   deleteTopic,
 }: {
   topics: responses['Topic'][];
-  currentTopic: number | undefined;
   deleteTopic: (id: number) => void;
 }) => {
   // TODO highlight current topic
@@ -74,7 +67,7 @@ const TopicList = ({
         <TopicEntry
           key={topic.id}
           topic={topic}
-          isCurrent={topic.id == currentTopic}
+          isCurrent={topic.id == currentTopic.value}
           deleteThis={() => deleteTopic(topic.id)}
         />
       ))}

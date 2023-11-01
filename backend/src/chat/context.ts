@@ -14,7 +14,7 @@ export async function topicContext(
   engine: ChatEngine,
 ): Promise<Message[]> {
   let context = (await storage.get(topicId)) ?? [];
-  context = [...PROMPT.getOrThrow(engine, []), ...context];
+  context = [...PROMPT.getOrThrow(engine, {}), ...context];
   return context;
 }
 
