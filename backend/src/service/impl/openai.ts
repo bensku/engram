@@ -8,9 +8,8 @@ declare global {
   const fetch: typeof import('node-fetch').default;
 }
 
-const API_URL = 'https://api.openai.com/v1';
-
 export function openAICompletions(
+  apiUrl: string,
   apiKey: string,
   type: 'text' | 'chat',
   model: string,
@@ -33,7 +32,7 @@ export function openAICompletions(
           temperature: options.temperature,
           max_tokens: options.maxTokens,
         };
-      const response = await fetch(`${API_URL}/chat/completions`, {
+      const response = await fetch(`${apiUrl}/chat/completions`, {
         method: 'POST',
         body: JSON.stringify(body),
         headers,

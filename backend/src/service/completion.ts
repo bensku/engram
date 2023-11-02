@@ -19,12 +19,19 @@ const services: Record<string, CompletionService> = {};
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 if (OPENAI_API_KEY) {
+  const apiUrl = 'https://api.openai.com/v1';
   services['openai:gpt-3.5-turbo'] = openAICompletions(
+    apiUrl,
     OPENAI_API_KEY,
     'chat',
     'gpt-3.5-turbo',
   );
-  services['openai:gpt-4'] = openAICompletions(OPENAI_API_KEY, 'chat', 'gpt-4');
+  services['openai:gpt-4'] = openAICompletions(
+    apiUrl,
+    OPENAI_API_KEY,
+    'chat',
+    'gpt-4',
+  );
 }
 
 if (process.env.AWS_ACCESS_KEY_ID) {
@@ -39,6 +46,41 @@ if (process.env.AWS_ACCESS_KEY_ID) {
   services['bedrock:cohere-command'] = bedrockCompletions(
     'cohere.command-text-v14',
     'cohere',
+  );
+}
+
+const ANYSCALE_API_KEY = process.env.ANYSCALE_API_KEY;
+if (ANYSCALE_API_KEY) {
+  const apiUrl = 'https://api.endpoints.anyscale.com/v1';
+  services['anyscale:llama-2-7b'] = openAICompletions(
+    apiUrl,
+    ANYSCALE_API_KEY,
+    'chat',
+    'meta-llama/Llama-2-7b-chat-hf',
+  );
+  services['anyscale:llama-2-13b'] = openAICompletions(
+    apiUrl,
+    ANYSCALE_API_KEY,
+    'chat',
+    'meta-llama/Llama-2-13b-chat-hf',
+  );
+  services['anyscale:llama-2-70b'] = openAICompletions(
+    apiUrl,
+    ANYSCALE_API_KEY,
+    'chat',
+    'meta-llama/Llama-2-70b-chat-hf',
+  );
+  services['anyscale:codellama-34b'] = openAICompletions(
+    apiUrl,
+    ANYSCALE_API_KEY,
+    'chat',
+    'codellama/CodeLlama-34b-Instruct-hf',
+  );
+  services['anyscale:mistral-7b-v0.1'] = openAICompletions(
+    apiUrl,
+    ANYSCALE_API_KEY,
+    'chat',
+    'mistralai/Mistral-7B-Instruct-v0.1',
   );
 }
 
