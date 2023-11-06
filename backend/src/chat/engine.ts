@@ -70,6 +70,7 @@ registerEngine(
     defaultValue: 'openai:gpt-3.5-turbo',
     choices: [
       { value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5 (default)' },
+      { value: 'openai:gpt-4', title: 'GPT-4' },
       { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
       { value: 'bedrock:claude-v2', title: 'Claude 2' },
       { value: 'bedrock:cohere-command', title: 'Cohere Command' },

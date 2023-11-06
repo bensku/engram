@@ -65,11 +65,12 @@ export function bedrockCompletions(
 }
 
 function claudePrompt(context: Message[]): string {
-  // Merge system prompt and first user prompt, since Claude may disregard the real system prompt
+  // Anthropic recommends including important instructions in first user message
+  // TODO evaluate this
   return (
-    `\n\nHuman: ${context[0].text} ${context[1].text}` +
+    `\n\nHuman: Install this system configuration:\n\n<system>${context[0].text}</system>\n\nAssistant: Configuration installed.` +
     context
-      .slice(2)
+      .slice(1)
       .map(
         (msg) =>
           `${msg.type == 'bot' ? '\n\nAssistant:' : '\n\nHuman:'}${msg.text}`,

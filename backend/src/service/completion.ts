@@ -24,13 +24,13 @@ if (OPENAI_API_KEY) {
     apiUrl,
     OPENAI_API_KEY,
     'chat',
-    'gpt-3.5-turbo',
+    'gpt-3.5-turbo-1106',
   );
   services['openai:gpt-4'] = openAICompletions(
     apiUrl,
     OPENAI_API_KEY,
     'chat',
-    'gpt-4',
+    'gpt-4-1106-preview',
   );
 }
 
@@ -49,6 +49,7 @@ if (process.env.AWS_ACCESS_KEY_ID) {
   );
 }
 
+// Anyscale Endpoints hosts common "open source" LLMs (cheaper than renting own GPUs)
 const ANYSCALE_API_KEY = process.env.ANYSCALE_API_KEY;
 if (ANYSCALE_API_KEY) {
   const apiUrl = 'https://api.endpoints.anyscale.com/v1';
