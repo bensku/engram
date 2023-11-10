@@ -1,5 +1,6 @@
 import { Message, PostMessageRequest } from '../service/message';
 import { TopicOptions } from '../service/topic';
+import { checkToolUsage, invokeTool } from '../tool/call';
 import { appendContext, topicContext } from './context';
 import { getEngine } from './engine';
 import { MODEL } from './options';
@@ -13,7 +14,6 @@ export async function handleMessage(
   options: TopicOptions,
 ) {
   const engine = getEngine(options.engine);
-  // TODO overrides
 
   // Fill in missing details to user message
   const message: Message = {
@@ -28,12 +28,49 @@ export async function handleMessage(
   stream.start(message, MODEL.getOrThrow(engine, options.options), Date.now());
 
   const context = await topicContext(topicId, engine);
-  context.push(message); // TODO remove once the storage actually works
 
   // Stream reply back to user (and save it once it has been completed)
-  const reply = await generateReply(stream, context, engine, options);
-  context.push(reply);
-  reply.id = await appendContext(topicId, reply);
+  for (;;) {
+    // Generate reply and stream it back to user if it includes text
+    const reply = await generateReply(stream, context, engine, options);
+    context.push(reply);
+    reply.id = await appendContext(topicId, reply);
+
+    // If tools need to be called, call them
+    if (reply.type == 'bot' && reply.toolCalls) {
+      for (const call of reply.toolCalls) {
+        // Check LLM-generated arguments
+        const request = await checkToolUsage(call);
+        if ('error' in request) {
+          // TODO error handling
+          console.error(request.error);
+        } else {
+          // TODO support for asking user confirmation
+          stream.sendFragment({ type: 'toolCall', text: request.callTitle });
+        }
+
+        // Call the tool
+        const result = await invokeTool(call);
+        if ('error' in result) {
+          // TODO error handling
+          console.error(result.error);
+        } else {
+          const toolMsg: Message = {
+            id: -1,
+            type: 'tool',
+            text: result.message,
+            tool: call.tool,
+            callId: call.id,
+            time: Date.now(),
+          };
+          context.push(toolMsg);
+          toolMsg.id = await appendContext(topicId, toolMsg);
+        }
+      }
+    } else {
+      break; // No more tool calls to do; stop generation for user input
+    } // else: allow LLM to reply to the tool messages
+  }
 
   // If the topic lacks a title, give it AI-generated one and stream that back too
   if (!options.title) {
@@ -42,5 +79,5 @@ export async function handleMessage(
     await updateTitle(topicId, title);
   }
 
-  stream.close(reply.id);
+  stream.close(context[context.length - 1].id);
 }

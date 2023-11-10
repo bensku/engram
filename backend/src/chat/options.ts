@@ -19,7 +19,7 @@ interface SelectOption extends BaseEngineOption<string> {
   choices?: { value: string; title: string }[];
 }
 
-interface ToggleOption extends BaseEngineOption<boolean> {
+export interface ToggleOption extends BaseEngineOption<boolean> {
   type: 'toggle';
 }
 

@@ -218,7 +218,7 @@ const ToggleField = ({
 }) => {
   return (
     <label class="checkbox">
-      <input type="checkbox" onClick={() => onChange(!value)} />
+      <input type="checkbox" checked={value} onClick={() => onChange(!value)} />
       <span>{name}</span>
     </label>
   );

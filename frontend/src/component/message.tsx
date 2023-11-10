@@ -16,6 +16,14 @@ export const Message = ({
   replaceMsg: (id: number, msg: responses['Message'] | null) => void;
   isLastBotMsg: boolean;
 }) => {
+  // Hide tool usage!
+  // TODO show tool usage, but differently
+  if (msg.type != 'user' && msg.type != 'bot') {
+    return null;
+  } else if (msg.type == 'bot' && msg.toolCalls) {
+    return null;
+  }
+
   const icon = msg.type == 'user' ? 'person' : 'robot';
   const sender =
     msg.type == 'bot'

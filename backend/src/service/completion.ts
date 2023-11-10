@@ -1,9 +1,13 @@
+import { ToolCall } from '../tool/call';
+import { Tool } from '../tool/core';
 import { bedrockCompletions } from './impl/bedrock';
 import { openAICompletions } from './impl/openai';
 import { Message } from './message';
 
-export const CompletionEnd = Symbol();
-export type CompletionPart = typeof CompletionEnd | string;
+export type CompletionPart =
+  | { type: 'text'; text: string }
+  | { type: 'tool'; calls: ToolCall[] }
+  | { type: 'end' };
 
 export type CompletionService = (
   context: Message[],
@@ -100,10 +104,12 @@ export function batchCompletionsForModel(
   return async (context, options) => {
     let text = '';
     for await (const part of completions(context, options)) {
-      if (part == CompletionEnd) {
+      if (part.type == 'end') {
         break;
+      } else if (part.type == 'text') {
+        text += part.text;
       } else {
-        text += part;
+        throw new Error('batch completions do not yet support tools');
       }
     }
     return text;
@@ -113,4 +119,5 @@ export function batchCompletionsForModel(
 export interface ModelOptions {
   temperature?: number;
   maxTokens?: number;
+  enabledTools?: Tool<unknown>[];
 }

@@ -1,5 +1,6 @@
 import { ModelOptions } from '../service/completion';
 import { TopicOptions } from '../service/topic';
+import { Tool, getTool, getTools } from '../tool/core';
 import {
   EngineOption,
   MODEL,
@@ -45,9 +46,18 @@ export function toModelOptions(
   engine: ChatEngine,
   options: TopicOptions,
 ): ModelOptions {
+  // Figure out which tools are enabled for the topic
+  const enabledTools: Tool<unknown>[] = [];
+  for (const [, tool] of getTools().entries()) {
+    if (tool.enableOption.get(engine, options.options)) {
+      enabledTools.push(tool);
+    }
+  }
+
   return {
     temperature: TEMPERATURE.getOrThrow(engine, options.options),
     maxTokens: 1000,
+    enabledTools,
   };
 }
 
@@ -56,12 +66,6 @@ function registerEngine(id: string, name: string, ...options: EngineOption[]) {
   ENGINES.set(id, engine);
   ENGINE_LIST.push(engine);
 }
-
-const WOLFRAM_ALPHA = new OptionType(
-  'toggle',
-  'wolfram-alpha',
-  'Enable Wolfram Alpha',
-);
 
 registerEngine(
   'default',
@@ -91,8 +95,8 @@ registerEngine(
   PROMPT.create({
     defaultValue: simplePrompt('You are a helpful AI assistant.'),
   }),
-  WOLFRAM_ALPHA.create({
-    defaultValue: false,
+  getTool('wolfram_alpha').enableOption.create({
+    defaultValue: true,
     userEditable: true,
   }),
 );

@@ -3,6 +3,9 @@ dotenv.config({
   path: '../.env',
 });
 
+// Register the supported tools, engines, etc. BEFORE loading rest of the application
+import './tool/tools/index';
+
 import * as Koa from 'koa';
 import * as Router from '@koa/router';
 import { RegisterRoutes } from '../generated/routes';

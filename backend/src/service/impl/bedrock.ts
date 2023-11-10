@@ -2,7 +2,7 @@ import {
   BedrockRuntimeClient,
   InvokeModelWithResponseStreamCommand,
 } from '@aws-sdk/client-bedrock-runtime';
-import { CompletionEnd, CompletionService } from '../completion';
+import { CompletionService } from '../completion';
 import { Message } from '../message';
 
 const CLIENT = new BedrockRuntimeClient();
@@ -49,18 +49,18 @@ export function bedrockCompletions(
           const part = JSON.parse(
             TEXT_DECODER.decode(entry.chunk.bytes),
           ) as ClaudeCompletionPart;
-          yield part.completion;
+          yield { type: 'text', text: part.completion };
         } else if (modelStyle == 'cohere') {
           const part = JSON.parse(
             TEXT_DECODER.decode(entry.chunk.bytes),
           ) as CommandCompletionPart;
           if (part.text) {
-            yield part.text;
+            yield { type: 'text', text: part.text };
           }
         }
       } // TODO: else handle errors
     }
-    yield CompletionEnd;
+    yield { type: 'end' };
   };
 }
 
@@ -68,12 +68,16 @@ function claudePrompt(context: Message[]): string {
   // Anthropic recommends including important instructions in first user message
   // TODO evaluate this
   return (
-    `\n\nHuman: Install this system configuration:\n\n<system>${context[0].text}</system>\n\nAssistant: Configuration installed.` +
+    `\n\nHuman: Install this system configuration:\n\n<system>${
+      context[0].text ?? ''
+    }</system>\n\nAssistant: Configuration installed.` +
     context
       .slice(1)
       .map(
         (msg) =>
-          `${msg.type == 'bot' ? '\n\nAssistant:' : '\n\nHuman:'}${msg.text}`,
+          `${msg.type == 'bot' ? '\n\nAssistant:' : '\n\nHuman:'}${
+            msg.text ?? ''
+          }`,
       )
       .join() +
     '\n\nAssistant:'
@@ -97,11 +101,12 @@ interface ClaudeCompletionPart {
 
 function simplePrompt(context: Message[]): string {
   return (
-    `${context[0].text}\n` +
+    `${context[0].text ?? ''}\n` +
     context
       .slice(1)
       .map(
-        (msg) => `${msg.type == 'bot' ? '\nAssistant:' : '\nUser:'}${msg.text}`,
+        (msg) =>
+          `${msg.type == 'bot' ? '\nAssistant:' : '\nUser:'}${msg.text ?? ''}`,
       )
       .join() +
     '\nAssistant:'

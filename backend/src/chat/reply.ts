@@ -1,5 +1,5 @@
 import { PassThrough } from 'stream';
-import { CompletionEnd, completionsForModel } from '../service/completion';
+import { completionsForModel } from '../service/completion';
 import { Message } from '../service/message';
 import { TopicOptions } from '../service/topic';
 import { ChatEngine, toModelOptions } from './engine';
@@ -40,7 +40,7 @@ export class ReplyStream {
   }
 
   close(id: number) {
-    this.#stream.write(`data: {"type": "end", "id": ${id}}`);
+    this.#stream.write(`data: {"type": "end", "id": "${id}"}`);
     this.#stream.end();
   }
 
@@ -64,11 +64,20 @@ export async function generateReply(
     context,
     toModelOptions(engine, topic),
   )) {
-    if (part == CompletionEnd) {
-      break;
+    if (part.type == 'text') {
+      text += part.text;
+      out.appendToMsg(part.text);
+    } else if (part.type == 'tool') {
+      // This assumes that tool call part comes last
+      return {
+        type: 'bot',
+        id: -1,
+        toolCalls: part.calls,
+        agent: engine.id,
+        time: Date.now(),
+      };
     } else {
-      text += part;
-      out.appendToMsg(part);
+      break; // end
     }
   }
 

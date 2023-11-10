@@ -28,10 +28,12 @@ export const topicRelations = relations(topic, ({ many }) => ({
 
 export const message = pgTable('message', {
   id: serial('id').primaryKey(),
+  type: text('type').notNull(),
   topic: integer('topic').notNull(),
-  source: text('source').notNull(),
-  text: text('text').notNull(),
   time: bigint('time', { mode: 'number' }).notNull(),
+  source: text('source'),
+  text: text('text'),
+  toolData: jsonb('toolData'),
 });
 
 export const messageRelations = relations(message, ({ one }) => ({

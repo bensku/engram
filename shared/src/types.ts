@@ -44,4 +44,9 @@ interface TitleFragment extends FragmentBase {
   title: string;
 }
 
-export type Fragment = TitleFragment;
+interface ToolCallFragment extends FragmentBase {
+  type: 'toolCall';
+  text: string;
+}
+
+export type Fragment = TitleFragment | ToolCallFragment;
