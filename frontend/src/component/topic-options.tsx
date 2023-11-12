@@ -16,7 +16,7 @@ export const TopicOptions = ({
   )?.options;
   const overrides = currentTopic.value.options ?? {};
   return (
-    <article class="max topic-options">
+    <article class="max tiny-margin no-round topic-options">
       <h6 class="center-align">Topic options</h6>
       <EngineSelection
         options={engines.value}
@@ -176,6 +176,13 @@ const SliderField = ({
     setCurrentValue(value);
   };
 
+  // Preact's Typescript types are sometimes quite incomplete
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const readValue = (event: any): number => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    return parseFloat(event.target.value);
+  };
+
   return (
     <div>
       <label>{name}</label>
@@ -188,7 +195,7 @@ const SliderField = ({
             min={min}
             max={max}
             step={0.01}
-            onChange={(event) => updateValue(parseFloat(event.target.value))}
+            onChange={(event) => updateValue(readValue(event))}
           />
           <span></span>
         </label>

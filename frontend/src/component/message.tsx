@@ -32,7 +32,7 @@ export const Message = ({
   const color = msg.type == 'user' ? 'indigo1' : '';
 
   return (
-    <article class={`medium-margin ${color}`}>
+    <article class={`medium-margin no-round ${color}`}>
       <div class="row no-space bolder">
         <i class="no-margin no-padding">{icon}</i>
         <div class="max">
@@ -53,7 +53,7 @@ export const Message = ({
         </button>
       </div>
       <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-        {msg.text}
+        {msg.text ?? ''}
       </ReactMarkdown>
     </article>
   );

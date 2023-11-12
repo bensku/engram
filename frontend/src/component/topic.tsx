@@ -130,7 +130,10 @@ export const Topic = ({
         } else {
           // Change message content
           messages.splice(i, 1, replacement);
-          void updateMessage({ messageId: id, message: replacement.text });
+          void updateMessage({
+            messageId: id,
+            message: replacement.text ?? '',
+          });
         }
         setMessages([...messages]); // Copy list to inform Preact about changes
       }

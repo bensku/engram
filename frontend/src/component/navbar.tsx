@@ -2,6 +2,7 @@ import { route } from 'preact-router';
 import { deleteTopic } from '../service/topic';
 import { responses } from '../types';
 import { currentTopic } from '../state';
+import { MinidenticonImg } from './icon';
 
 export const NavBar = ({
   topics,
@@ -11,26 +12,32 @@ export const NavBar = ({
   deleteTopic: (id: number) => void;
 }) => {
   return (
-    <nav class="small-padding surface-variant">
+    <article
+      class="navbar small-padding tiny-margin no-round"
+      role="navigation"
+    >
       <UserCard />
       <NewTopicButton />
       <TopicList topics={topics} deleteTopic={deleteTopic} />
-    </nav>
+    </article>
   );
 };
 
 const UserCard = () => {
   return (
-    <article class="row secondary-container top-align">
-      <div class="large-text">bensku</div>
-      <div class="spacer max" />
-      <button class="transparent circle">
-        <i>settings</i>
-        <div class="tooltip">Settings</div>
+    <article class="row container top-align small-padding">
+      <button class="transparent circle extra">
+        <MinidenticonImg username="bensku" lightness={40} saturation={80} />
+        <div class="tooltip bottom">Settings</div>
       </button>
-      <button class="transparent circle">
+      <div class="small-padding vertical">
+        <div class="large-text">Benjami</div>
+        <div class="secondary-text">Administrator</div>
+      </div>
+      <div class="spacer max" />
+      <button class="transparent circle huge">
         <i class="error-text">logout</i>
-        <div class="tooltip">Logout</div>
+        <div class="tooltip bottom">Log out</div>
       </button>
     </article>
   );
@@ -44,7 +51,7 @@ const NewTopicButton = () => {
 
   return (
     <button
-      class="border row small-padding surface-variant primary-text"
+      class="border row small-padding no-margin surface-variant primary-text"
       onClick={newTopic}
     >
       <i>add</i>
@@ -62,16 +69,16 @@ const TopicList = ({
 }) => {
   // TODO highlight current topic
   return (
-    <>
+    <div class="vertical">
       {topics.map((topic) => (
         <TopicEntry
           key={topic.id}
           topic={topic}
-          isCurrent={topic.id == currentTopic.value}
+          isCurrent={topic.id == currentTopic.value.id}
           deleteThis={() => deleteTopic(topic.id)}
         />
       ))}
-    </>
+    </div>
   );
 };
 
@@ -86,23 +93,26 @@ const TopicEntry = ({
 }) => {
   const _delete = () => {
     deleteThis();
-    if (isCurrent) {
-      setTimeout(() => route('/'), 100);
-    }
+    // FIXME don't always go to the front page
+    setTimeout(() => route('/'), 100);
   };
 
-  let styles = 'row no-margin no-padding no-space surface-variant primary-text';
+  let styles = 'no-padding chip no-round';
   if (isCurrent) {
-    styles += ' fill';
+    styles += ' border surface-variant';
+  } else {
+    styles += ' no-border';
   }
   return (
-    <button key={topic.id} class={styles} onClick={() => route(`/${topic.id}`)}>
+    <a key={topic.id} class={styles} onClick={() => route(`/${topic.id}`)}>
       <i class="small-padding">chat</i>
-      <div class="max left-align truncate">{topic.title}</div>
-      <button class="transparent circle front" onClick={_delete}>
+      <div class="max-width truncate">{topic.title}</div>
+      <button
+        class="transparent circle front small center-align no-margin"
+        onClick={_delete}
+      >
         <i class="no-padding">delete</i>
-        <div class="tooltip">Delete topic</div>
       </button>
-    </button>
+    </a>
   );
 };
