@@ -76,38 +76,62 @@ export const Topic = ({
 
       // Stream reply back from server
       // When server is finished, prepare for user reply
-      const msg: responses['BotMessage'] = {
-        type: 'bot',
-        id: -1,
-        agent: '',
-        text: '',
-        time: Date.now(),
-      };
+      let msg: responses['BotMessage'] | null = null;
       for await (const part of reply) {
         if (part.type == 'start') {
-          messages.push({
-            type: 'user',
-            id: part.replyTo.id,
-            text,
-            time: part.replyTo.time,
-          });
+          if (part.replyTo) {
+            messages.push({
+              type: 'user',
+              id: part.replyTo.id,
+              text,
+              time: part.replyTo.time,
+            });
+          }
+          if (msg && msg.text) {
+            messages.push(msg);
+            setLast(undefined); // Avoid briefly displaying same message twice!
+          }
+          msg = {
+            type: 'bot',
+            id: -1,
+            agent: '',
+            text: '',
+            time: Date.now(),
+          };
           msg.agent = part.agent;
           msg.time = part.time;
           setMessages([...messages]);
         } else if (part.type == 'msg') {
+          if (msg == null) {
+            throw new Error('wrong order in reply stream');
+          }
           msg.text += part.data;
           setLast({ ...msg });
         } else if (part.type == 'fragment') {
           // TODO proper fragment handling
           if (part.data.type == 'title') {
             void updateTopic({ title: part.data.title }, 'never');
+          } else if (part.data.type == 'toolCall') {
+            // TODO show something about tool call in flight
+          } else if (part.data.type == 'toolCallCompleted') {
+            messages.push({
+              type: 'tool',
+              id: Date.now(), // Just something that won't have duplicates
+              tool: part.data.tool,
+              callId: '',
+              text: part.data.text,
+              time: Date.now(),
+            });
+            setMessages([...messages]);
           }
         } else if (part.type == 'end') {
           // Don't refer to last, it has not been updated
+          if (msg == null) {
+            throw new Error('wrong order in reply stream');
+          }
           msg.id = part.id;
           setMessages([...messages, msg]);
           setLast(undefined);
-          return;
         } // else: should never happen
       }
     })();

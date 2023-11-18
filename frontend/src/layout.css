@@ -4,7 +4,10 @@
 }
 
 .navbar {
-  width: 20em;
+  max-width: 20em;
+  min-width: 20em;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .navbar > * {

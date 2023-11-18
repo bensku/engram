@@ -7,7 +7,7 @@ interface StartPart extends CompletionPartBase {
   /**
    * Id of the message this reply is for.
    */
-  replyTo: { id: number; time: number };
+  replyTo?: { id: number; time: number };
 
   agent: string;
   time: number;
@@ -46,7 +46,17 @@ interface TitleFragment extends FragmentBase {
 
 interface ToolCallFragment extends FragmentBase {
   type: 'toolCall';
+  tool: string;
   text: string;
 }
 
-export type Fragment = TitleFragment | ToolCallFragment;
+interface ToolCallCompletedFragment extends FragmentBase {
+  type: 'toolCallCompleted';
+  tool: string;
+  text: string;
+}
+
+export type Fragment =
+  | TitleFragment
+  | ToolCallFragment
+  | ToolCallCompletedFragment;

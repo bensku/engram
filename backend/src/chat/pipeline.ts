@@ -38,6 +38,10 @@ export async function handleMessage(
 
     // If tools need to be called, call them
     if (reply.type == 'bot' && reply.toolCalls) {
+      // End the current reply before sending tool message to user
+      // Otherwise, the messages might be in wrong order
+      stream.start(null, MODEL.getOrThrow(engine, options.options), Date.now());
+
       for (const call of reply.toolCalls) {
         // Check LLM-generated arguments
         const request = await checkToolUsage(call);
@@ -46,7 +50,11 @@ export async function handleMessage(
           console.error(request.error);
         } else {
           // TODO support for asking user confirmation
-          stream.sendFragment({ type: 'toolCall', text: request.callTitle });
+          stream.sendFragment({
+            type: 'toolCall',
+            tool: call.tool,
+            text: request.callTitle,
+          });
         }
 
         // Call the tool
@@ -65,6 +73,11 @@ export async function handleMessage(
           };
           context.push(toolMsg);
           toolMsg.id = await appendContext(topicId, toolMsg);
+          stream.sendFragment({
+            type: 'toolCallCompleted',
+            tool: call.tool,
+            text: toolMsg.text,
+          });
         }
       }
     } else {

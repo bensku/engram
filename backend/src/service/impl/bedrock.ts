@@ -68,11 +68,13 @@ function claudePrompt(context: Message[]): string {
   // Anthropic recommends including important instructions in first user message
   // TODO evaluate this
   return (
-    `\n\nHuman: Install this system configuration:\n\n<system>${
-      context[0].text ?? ''
-    }</system>\n\nAssistant: Configuration installed.` +
+    `\n\nHuman: ${context[0].text ?? ''}
+
+BEGIN DIALOGUE
+
+${context[1].text ?? ''}` +
     context
-      .slice(1)
+      .slice(2)
       .map(
         (msg) =>
           `${msg.type == 'bot' ? '\n\nAssistant:' : '\n\nHuman:'}${

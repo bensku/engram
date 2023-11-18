@@ -16,12 +16,28 @@ export const Message = ({
   replaceMsg: (id: number, msg: responses['Message'] | null) => void;
   isLastBotMsg: boolean;
 }) => {
-  // Hide tool usage!
-  // TODO show tool usage, but differently
-  if (msg.type != 'user' && msg.type != 'bot') {
-    return null;
-  } else if (msg.type == 'bot' && msg.toolCalls) {
-    return null;
+  if (msg.type == 'tool') {
+    return (
+      <article class={`medium-margin tiny-padding no-round tertiary-container`}>
+        <details>
+          <summary class="row">
+            <div class="max">Used tool: {msg.tool}</div>
+            <button
+              class="transparent circle"
+              onClick={() => replaceMsg(msg.id, null)}
+            >
+              <i>delete</i>
+              <div class="tooltip bottom">Delete</div>
+            </button>
+          </summary>
+          <div>
+            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+              {msg.text ?? ''}
+            </ReactMarkdown>
+          </div>
+        </details>
+      </article>
+    );
   }
 
   const icon = msg.type == 'user' ? 'person' : 'robot';

@@ -13,7 +13,8 @@ export class ReplyStream {
     this.#stream = new PassThrough();
   }
 
-  start(replyTo: Message, agent: string, time: number) {
+  start(replyTo: Message | null, agent: string, time: number) {
+    console.log('start');
     const entry = {
       type: 'start',
       replyTo,
@@ -32,6 +33,7 @@ export class ReplyStream {
   }
 
   sendFragment(fragment: Fragment) {
+    console.log('frag', fragment);
     const entry = {
       type: 'fragment',
       data: fragment,
@@ -72,6 +74,7 @@ export async function generateReply(
       return {
         type: 'bot',
         id: -1,
+        text,
         toolCalls: part.calls,
         agent: engine.id,
         time: Date.now(),

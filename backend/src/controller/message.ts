@@ -30,7 +30,8 @@ export class MessageController extends Controller {
     @Path() topicId: number,
   ): Promise<Message[]> {
     // TODO authz, topic owner check
-    return fullContext(topicId);
+    // Only send messages that have text content to user for now
+    return (await fullContext(topicId)).filter((msg) => msg.text);
   }
 
   @Security('auth')

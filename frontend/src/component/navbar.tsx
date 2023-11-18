@@ -1,5 +1,4 @@
 import { route } from 'preact-router';
-import { deleteTopic } from '../service/topic';
 import { responses } from '../types';
 import { currentTopic } from '../state';
 import { MinidenticonImg } from './icon';
