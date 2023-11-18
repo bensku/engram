@@ -14,7 +14,6 @@ export class ReplyStream {
   }
 
   start(replyTo: Message | null, agent: string, time: number) {
-    console.log('start');
     const entry = {
       type: 'start',
       replyTo,
@@ -33,7 +32,6 @@ export class ReplyStream {
   }
 
   sendFragment(fragment: Fragment) {
-    console.log('frag', fragment);
     const entry = {
       type: 'fragment',
       data: fragment,

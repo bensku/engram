@@ -119,5 +119,5 @@ export function batchCompletionsForModel(
 export interface ModelOptions {
   temperature?: number;
   maxTokens?: number;
-  enabledTools?: Tool<unknown>[];
+  enabledTools?: Tool<object>[];
 }

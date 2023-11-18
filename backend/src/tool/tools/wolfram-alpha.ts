@@ -5,7 +5,11 @@ import { JSONSchemaType } from 'ajv';
 const SCHEMA: JSONSchemaType<{ query: string }> = {
   type: 'object',
   properties: {
-    query: { type: 'string', description: 'The query to WolframAlpha' },
+    query: {
+      type: 'string',
+      description:
+        'The query to WolframAlpha. Convert queries to simplified keywords when possible (e.g. convert "who is POTUS" to "president of united states")',
+    },
   },
   required: ['query'],
   additionalProperties: false,

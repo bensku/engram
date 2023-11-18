@@ -47,7 +47,7 @@ export function toModelOptions(
   options: TopicOptions,
 ): ModelOptions {
   // Figure out which tools are enabled for the topic
-  const enabledTools: Tool<unknown>[] = [];
+  const enabledTools: Tool<object>[] = [];
   for (const [, tool] of getTools().entries()) {
     if (tool.enableOption.get(engine, options.options)) {
       enabledTools.push(tool);

@@ -2,7 +2,7 @@ import { JSONSchemaType } from 'ajv';
 import { OptionType, ToggleOption } from '../chat/options';
 import { ToolFailure, ToolRequest, ToolResult } from './call';
 
-export interface Tool<T> {
+export interface Tool<T extends object> {
   /**
    * Type of option that enables or disables this for a topic.
    */
@@ -34,18 +34,18 @@ export interface Tool<T> {
   handler: (args: T) => Promise<ToolResult | ToolFailure>;
 }
 
-const tools: Map<string, Tool<unknown>> = new Map();
+const tools: Map<string, Tool<object>> = new Map();
 
-export function registerTool<T>(options: Tool<T>): void {
+export function registerTool<T extends object>(options: Tool<T>): void {
   const tool: Tool<T> = { ...options };
-  tools.set(tool.name, tool as Tool<unknown>);
+  tools.set(tool.name, tool as Tool<object>);
 }
 
-export function getTools(): ReadonlyMap<string, Tool<unknown>> {
+export function getTools(): ReadonlyMap<string, Tool<object>> {
   return tools;
 }
 
-export function getTool(name: string): Tool<unknown> {
+export function getTool(name: string): Tool<object> {
   const tool = tools.get(name);
   if (!tool) {
     throw new Error(`no tool found: ${name}`);
