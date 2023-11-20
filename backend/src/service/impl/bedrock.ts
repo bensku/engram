@@ -5,15 +5,16 @@ import {
 import { CompletionService } from '../completion';
 import { Message } from '../message';
 import { Tool } from '../../tool/core';
-import { parseToolCalls, toolsToPrompt } from '../../tool/prompt';
-import { ToolCall } from '../../tool/call';
+import { XmlPromptSource } from '../../tool/prompt/xml';
 
 const CLIENT = new BedrockRuntimeClient();
 const TEXT_DECODER = new TextDecoder();
 
+const TOOL_PROMPTER = new XmlPromptSource();
+
 export function bedrockCompletions(
   model: string,
-  modelStyle: 'claude' | 'cohere' | 'ai21',
+  modelStyle: 'claude' | 'cohere',
 ): CompletionService {
   return async function* (context, options) {
     let bodyText: string;
@@ -22,13 +23,12 @@ export function bedrockCompletions(
         prompt: claudePrompt(context, options.enabledTools ?? []),
         temperature: options.temperature,
         max_tokens_to_sample: options.maxTokens,
-        stop_sequences: ['\n\nHuman:'],
+        stop_sequences: ['\n\nHuman:', '</tool_calls>'],
       };
-      console.log(body.prompt);
       bodyText = JSON.stringify(body);
     } else if (modelStyle == 'cohere') {
       const body: CommandBody = {
-        prompt: simplePrompt(context),
+        prompt: simplePrompt(context, options.enabledTools ?? []),
         temperature: options.temperature,
         max_tokens: options.maxTokens,
         stream: true,
@@ -47,63 +47,47 @@ export function bedrockCompletions(
     if (result.body == undefined) {
       throw new Error('missing body'); // ???
     }
-    let ongoingCall = false;
-    let toolCall = '';
+    const toolParser = TOOL_PROMPTER.newParser();
     for await (const entry of result.body) {
       if (entry.chunk) {
         if (modelStyle == 'claude') {
           const part = JSON.parse(
             TEXT_DECODER.decode(entry.chunk.bytes),
           ) as ClaudeCompletionPart;
-          if (part.completion.startsWith('<calls')) {
-            toolCall += part.completion;
-            ongoingCall = true;
-          } else if (ongoingCall) {
-            const end = part.completion.indexOf('</calls>');
-            if (end == -1) {
-              toolCall += part.completion;
-            } else {
-              toolCall += part.completion.substring(0, end + 8);
-              ongoingCall = false;
-            }
-          } else {
-            if (toolCall != '') {
-              yield { type: 'tool', calls: parseClaudeToolCall(toolCall) };
-              toolCall = '';
-            }
-            yield { type: 'text', text: part.completion };
+          const text = toolParser.append(part.completion);
+          if (text.trim()) {
+            yield { type: 'text', text };
           }
         } else if (modelStyle == 'cohere') {
           const part = JSON.parse(
             TEXT_DECODER.decode(entry.chunk.bytes),
           ) as CommandCompletionPart;
           if (part.text) {
-            yield { type: 'text', text: part.text };
+            const text = toolParser.append(part.text);
+            if (text.trim()) {
+              yield { type: 'text', text };
+            }
           }
         }
       } // TODO: else handle errors
     }
-    if (toolCall) {
-      yield { type: 'tool', calls: parseClaudeToolCall(toolCall) };
+    const calls = toolParser.parse();
+    if (calls.length > 0) {
+      yield { type: 'tool', calls };
     }
     yield { type: 'end' };
   };
 }
 
-function parseClaudeToolCall(text: string): ToolCall[] {
-  // Just remove the start and stop tags
-  return parseToolCalls(text.replace('<calls>', '').replace('</calls>', ''));
-}
-
 function formatClaudeMessage(msg: Message): string {
   if (msg.type == 'bot') {
     return msg.toolCalls
-      ? '\n\nAssistant: Let me use use an external tool, second...'
+      ? `\n\nAssistant: ${TOOL_PROMPTER.toolMessage(msg.toolCalls)}`
       : `\n\nAssistant:${msg.text ?? ''}`;
   } else if (msg.type == 'user') {
     return `\n\nHuman:${msg.text}`;
   } else if (msg.type == 'tool') {
-    return `\n\nHuman: [SYSTEM] Call completed. Your results:\n<results>\n${msg.text}\n</results>`;
+    return `\n---\n${msg.text}`;
   } else {
     throw new Error();
   }
@@ -113,23 +97,7 @@ function claudePrompt(context: Message[], tools: Tool<object>[]): string {
   let toolMsg = '';
   if (tools.length > 0) {
     toolMsg = `
-You have access to several external tools. Use that when you think is appropriate.
-<tools>
-${toolsToPrompt(tools)}
-</tools>
-
-To use tools, write calls for them in your reply as if they were TypeScript functions. Wrap your replies in calls tag, for example:
-<calls>
-example_tool("Argument 1", "Argument 2")
-another_tool("Some text")
-</calls>
-
-You decide when to call a tool. If no tools are applicable, then don't call them! When you do decide to call a tool, please write NOTHING else.
-
-The system will provide you results from the tool call results tag, like this:
-<results>
-Hello from Internet!
-</results>
+${TOOL_PROMPTER.systemPrompt(tools)}
 `;
   }
 
@@ -137,7 +105,7 @@ Hello from Internet!
   // TODO evaluate this
   return (
     `\n\nHuman: ${context[0].text ?? ''}
-${context[context.length - 1].type == 'tool' ? '' : toolMsg}
+${toolMsg}
 BEGIN DIALOGUE
 
 ${formatClaudeMessage(context[1])}` +
@@ -164,15 +132,32 @@ interface ClaudeCompletionPart {
   stop?: string;
 }
 
-function simplePrompt(context: Message[]): string {
+function formatSimpleMessage(msg: Message): string {
+  if (msg.type == 'bot') {
+    return msg.toolCalls
+      ? `\nAssistant: ${TOOL_PROMPTER.toolMessage(msg.toolCalls)}`
+      : `\nAssistant:${msg.text ?? ''}`;
+  } else if (msg.type == 'user') {
+    return `\nUser:${msg.text}`;
+  } else if (msg.type == 'tool') {
+    return `\n---\n${msg.text}`;
+  } else {
+    throw new Error();
+  }
+}
+
+function simplePrompt(context: Message[], tools: Tool<object>[]): string {
+  let toolMsg = '';
+  if (tools.length > 0) {
+    toolMsg = `
+${TOOL_PROMPTER.systemPrompt(tools)}
+`;
+  }
   return (
-    `${context[0].text ?? ''}\n` +
+    `${context[0].text ?? ''}\n\n${toolMsg}\n` +
     context
       .slice(1)
-      .map(
-        (msg) =>
-          `${msg.type == 'bot' ? '\nAssistant:' : '\nUser:'}${msg.text ?? ''}`,
-      )
+      .map((msg) => formatSimpleMessage(msg))
       .join() +
     '\nAssistant:'
   );

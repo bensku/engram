@@ -8,7 +8,7 @@ const SCHEMA: JSONSchemaType<{ query: string }> = {
     query: {
       type: 'string',
       description:
-        'The query to WolframAlpha. Convert queries to simplified keywords when possible (e.g. convert "who is POTUS" to "president of united states")',
+        'The query to WolframAlpha. Convert queries to simplified keywords when possible (e.g. convert "who is POTUS" to "president of united states"). If you need to ask multiple things, simple call this tool multiple times!',
     },
   },
   required: ['query'],
