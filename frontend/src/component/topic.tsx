@@ -9,7 +9,14 @@ import {
   updateMessage,
 } from '../service/message';
 import { debounce } from '../debounce';
-import { currentTopic } from '../state';
+import {
+  currentTopic,
+  pendingMessage,
+  speechInputEnabled,
+  speechInputHandler,
+} from '../state';
+import { BASE_URL } from '../service/api';
+import { Howl } from 'howler';
 
 export const EmptyTopic = ({
   updateTopic,
@@ -19,13 +26,15 @@ export const EmptyTopic = ({
     updateServer: 'never' | 'always',
   ) => Promise<number>;
 }) => {
-  const newTopic = (text: string) => {
+  const newTopic = (message: string, format: string) => {
     void (async () => {
       const topicId = await updateTopic({}, 'always');
-      localStorage.setItem('pending-msg', text);
+      pendingMessage.value = { content: message, format };
       route(`/${topicId}`);
     })();
   };
+
+  speechInputHandler.value = (audio) => newTopic(audio, 'speech');
 
   return (
     <>
@@ -35,7 +44,7 @@ export const EmptyTopic = ({
         setTitle={(title) => void updateTopic({ title: title }, 'never')}
       />
       <MessageList messages={[]} replaceMessage={() => null} />
-      <MessageForm onSubmit={newTopic} />
+      <MessageForm onSubmit={(text) => newTopic(text, 'text')} />
     </>
   );
 };
@@ -58,20 +67,20 @@ export const Topic = ({
       const res = await getMessages({ topicId: id });
       setMessages(res.data);
 
-      const pendingMsg = localStorage.getItem('pending-msg');
-      if (pendingMsg) {
-        localStorage.removeItem('pending-msg');
-        post(pendingMsg);
+      if (pendingMessage.value) {
+        const msg = pendingMessage.value;
+        pendingMessage.value = null;
+        post(msg.content, msg.format);
       }
     })();
   }, [id]);
 
-  const post = (text: string) => {
+  const post = (message: string, format: string) => {
     void (async () => {
       // Post user message to server
       const reply = postMessage({
         topicId: id,
-        message: { message: text },
+        message: { message, format },
       });
 
       // Stream reply back from server
@@ -83,7 +92,7 @@ export const Topic = ({
             messages.push({
               type: 'user',
               id: part.replyTo.id,
-              text,
+              text: part.replyTo.text,
               time: part.replyTo.time,
             });
           }
@@ -134,6 +143,22 @@ export const Topic = ({
           setLast(undefined);
         } // else: should never happen
       }
+
+      // After message has been received, read it out loud (if speech mode is enabled)
+      if (speechInputEnabled.value && msg?.text) {
+        new Howl({
+          src: `${BASE_URL}/tts/${encodeURIComponent(msg.text)}`,
+          html5: true,
+          autoplay: true,
+          format: 'opus',
+          onloaderror: (_, error) => {
+            console.error(error);
+          },
+          onplayerror: (_, error) => {
+            console.error(error);
+          },
+        });
+      }
     })();
   };
 
@@ -157,12 +182,15 @@ export const Topic = ({
           void updateMessage({
             messageId: id,
             message: replacement.text ?? '',
+            format: 'text',
           });
         }
         setMessages([...messages]); // Copy list to inform Preact about changes
       }
     }
   };
+
+  speechInputHandler.value = (audio) => post(audio, 'speech');
 
   return (
     <>
@@ -176,7 +204,7 @@ export const Topic = ({
         last={last}
         replaceMessage={replaceMessage}
       />
-      <MessageForm onSubmit={post} />
+      <MessageForm onSubmit={(text) => post(text, 'text')} />
     </>
   );
 };

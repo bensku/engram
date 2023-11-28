@@ -6,7 +6,7 @@ import { EmptyTopic, Topic } from './component/topic';
 import { NavBar } from './component/navbar';
 import Router, { RoutableProps } from 'preact-router';
 import './layout.css';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import {
   createTopic,
   deleteTopic,
@@ -17,16 +17,15 @@ import {
 import { responses } from './types';
 import { TopicOptions } from './component/topic-options';
 import { listEngines } from './service/engine';
-import { currentTopic, engineMap, engines } from './state';
+import { currentTopic, engineMap, engines, topics } from './state';
+import { SpeechInput } from './component/speech';
 
 const App = ({ id }: { id?: string } & RoutableProps) => {
-  const [topics, setTopics] = useState<responses['Topic'][]>([]);
-
   useEffect(() => {
     void (async () => {
       const topicsPromise = listTopics({});
       const enginesPromise = listEngines({});
-      setTopics((await topicsPromise).data);
+      topics.value = (await topicsPromise).data;
       engines.value = (await enginesPromise).data;
       const map = new Map<string, responses['ChatEngine']>();
       for (const engine of engines.value) {
@@ -55,24 +54,25 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
 
     // Update existing topic...
     if (topicId !== undefined) {
-      for (let i = 0; i < topics.length; i++) {
-        if (topics[i].id == topicId) {
+      for (let i = 0; i < topics.value.length; i++) {
+        const topic = topics.value[i];
+        if (topic.id == topicId) {
           if (updateServer != 'never') {
             await updateTopic({ id: topicId, ...newTopic });
           }
-          topics.splice(i, 1, { ...topics[i], ...newTopic });
-          setTopics([...topics]);
+          topics.value.splice(i, 1, { ...topic, ...newTopic });
+          topics.value = [...topics.value];
           return topicId;
         }
       }
-      throw new Error();
+      throw new Error(`invalid topicId ${topicId}`);
     } else {
       // OR create a new topic
       if (updateServer != 'always') {
         return -1; // Do not create a topic yet; this is probable someone changing options
       }
       const details = (await createTopic(currentTopic.value)).data;
-      setTopics([
+      topics.value = [
         {
           id: details.id,
           user: details.user,
@@ -80,25 +80,25 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
           engine: newTopic.engine ?? 'default',
           options: newTopic.options ?? {},
         },
-        ...topics,
-      ]);
+        ...topics.value,
+      ];
       return details.id;
     }
   };
 
   const _deleteTopic = (id: number) => {
     void deleteTopic({ id });
-    for (let i = 0; i < topics.length; i++) {
-      if (topics[i].id == id) {
-        topics.splice(i, 1);
-        setTopics([...topics]);
+    for (let i = 0; i < topics.value.length; i++) {
+      if (topics.value[i].id == id) {
+        topics.value.splice(i, 1);
+        topics.value = [...topics.value];
       }
     }
   };
 
   return (
     <>
-      <NavBar topics={topics} deleteTopic={_deleteTopic} />
+      <NavBar deleteTopic={_deleteTopic} />
       <main>
         {id ? (
           <Topic id={parseInt(id)} updateTopic={_updateTopic} />
@@ -107,6 +107,7 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
         )}
       </main>
       <TopicOptions updateTopic={_updateTopic} />
+      <SpeechInput />
     </>
   );
 };

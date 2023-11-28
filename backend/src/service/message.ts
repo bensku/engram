@@ -56,6 +56,7 @@ interface ToolMessage extends BaseMessage {
 export type Message = UserMessage | BotMessage | SystemMessage | ToolMessage;
 
 export interface PostMessageRequest {
+  format: string;
   message: string;
 }
 

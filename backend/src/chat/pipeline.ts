@@ -1,11 +1,17 @@
+import { openAITranscriptions } from '../service/impl/openai';
 import { Message, PostMessageRequest } from '../service/message';
 import { TopicOptions } from '../service/topic';
+import { TranscriptionService } from '../service/transcription';
 import { checkToolUsage, invokeTool } from '../tool/call';
 import { appendContext, topicContext } from './context';
 import { getEngine } from './engine';
-import { MODEL } from './options';
+import { MODEL, SPEECH_MODE } from './options';
 import { generateReply, ReplyStream } from './reply';
 import { generateTitle, updateTitle } from './title-gen';
+
+const transcribe: TranscriptionService | null = process.env.OPENAI_API_KEY
+  ? openAITranscriptions(process.env.OPENAI_API_KEY, 'canary-whisper')
+  : null;
 
 export async function handleMessage(
   topicId: number,
@@ -13,13 +19,26 @@ export async function handleMessage(
   stream: ReplyStream,
   options: TopicOptions,
 ) {
+  let text = request.message;
+  if (request.format == 'speech') {
+    if (!transcribe) {
+      throw new Error('transcriptions unavailable, missing OPENAI_API_KEY');
+    }
+    // Spoken message received; transcribe it
+    const audio = Buffer.from(request.message, 'binary');
+    text = await transcribe(audio, 'en');
+
+    // Enable voice mode for reply generation (model will generate something shorter)
+    options.options[SPEECH_MODE.id] = true;
+  }
+
   const engine = getEngine(options.engine);
 
   // Fill in missing details to user message
   const message: Message = {
     type: 'user',
     id: -1,
-    text: request.message,
+    text,
     time: Date.now(),
   };
   message.id = await appendContext(topicId, message);
@@ -27,7 +46,7 @@ export async function handleMessage(
   // Send them back to the user, along with other information
   stream.start(message, MODEL.getOrThrow(engine, options.options), Date.now());
 
-  const context = await topicContext(topicId, engine);
+  const context = await topicContext(topicId, engine, options);
 
   // Stream reply back to user (and save it once it has been completed)
   for (;;) {

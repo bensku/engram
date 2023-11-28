@@ -3,10 +3,8 @@ import { readLines } from '@bensku/engram-shared/src/sse';
 import { components, paths } from '../../../generated/openai';
 import { CompletionService, ModelOptions } from '../completion';
 import { Message } from '../message';
-
-declare global {
-  const fetch: typeof import('node-fetch').default;
-}
+import { TranscriptionService } from '../transcription';
+import { TtsService } from '../tts';
 
 export function openAICompletions(
   apiUrl: string,
@@ -175,4 +173,66 @@ interface ChatCompletionPart {
     index: number;
     finish_reason: string | null;
   }[];
+}
+
+export function openAITranscriptions(
+  apiKey: string,
+  model: string,
+): TranscriptionService {
+  return async (audio, language) => {
+    const formData = new FormData();
+    formData.append(
+      'file',
+      new Blob([Buffer.from(audio)], { type: 'audio/wav' }),
+    );
+    formData.append('model', model);
+    if (language) {
+      formData.append('language', language);
+    }
+
+    const response = await fetch(
+      'https://api.openai.com/v1/audio/transcriptions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: formData,
+      },
+    );
+    const result =
+      (await response.json()) as components['schemas']['CreateTranscriptionResponse'];
+    return result.text;
+  };
+}
+
+export function openAITts(apiKey: string, model: string): TtsService {
+  return async function* (text, voice) {
+    const body: paths['/audio/speech']['post']['requestBody']['content']['application/json'] =
+      {
+        model,
+        input: text,
+        // OpenAI API actually types the allowed voices, which is nice... except that we want to support other TTS providers too
+        voice:
+          voice as paths['/audio/speech']['post']['requestBody']['content']['application/json']['voice'],
+        response_format: 'opus',
+      };
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+    for (;;) {
+      const { value } = await reader.read();
+      if (!value) {
+        break;
+      }
+      yield value;
+    }
+  };
 }

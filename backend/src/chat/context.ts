@@ -1,7 +1,8 @@
 import { DbMessageStorage } from '../service/impl/postgres';
 import { Message, MessageStorage } from '../service/message';
+import { TopicOptions } from '../service/topic';
 import { ChatEngine } from './engine';
-import { PROMPT } from './options';
+import { PROMPT, SPEECH_MODE } from './options';
 
 const storage: MessageStorage = new DbMessageStorage();
 
@@ -12,9 +13,20 @@ export async function fullContext(topicId: number): Promise<Message[]> {
 export async function topicContext(
   topicId: number,
   engine: ChatEngine,
+  options: TopicOptions,
 ): Promise<Message[]> {
   let context = (await storage.get(topicId)) ?? [];
   context = [...PROMPT.getOrThrow(engine, {}), ...context];
+
+  if (SPEECH_MODE.get(engine, options.options)) {
+    context[0] = {
+      ...context[0],
+      text: `${
+        context[0].text ?? ''
+      }\n\nYou are in a voice call with the user. Most of the time, your lines should be a sentence or two, unless the user requests reasoning or long-form outputs. Don't include links in your lines, as they cannot be read out loud.`,
+    };
+  }
+
   return context;
 }
 

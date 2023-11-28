@@ -37,9 +37,9 @@ export type EngineOption =
 
 export class OptionType<T extends EngineOption> {
   constructor(
-    private type: T['type'],
-    private id: string,
-    private title: string,
+    public readonly type: T['type'],
+    public readonly id: string,
+    public readonly title: string,
   ) {}
 
   create(props: Omit<Omit<Omit<T, 'id'>, 'type'>, 'title'>): T {
@@ -102,4 +102,17 @@ export const TEMPERATURE = new OptionType<SliderOption>(
   'slider',
   'temperature',
   'Temperature',
+);
+
+export const SPEECH_MODE = new OptionType<ToggleOption>(
+  'toggle',
+  'speech-mode',
+  'Speech mode',
+);
+
+// TODO unused for now
+export const SPEECH_VOICE = new OptionType<UnknownOption<string>>(
+  'unknown',
+  'speech-voice',
+  'Speech voice',
 );

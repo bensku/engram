@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { debounce } from '../debounce';
-import { currentTopic, engineMap, engines } from '../state';
+import { currentTopic, engineMap, engines, speechInputEnabled } from '../state';
 import { responses } from '../types';
 
 export const TopicOptions = ({
@@ -43,6 +43,14 @@ export const TopicOptions = ({
           }
         />
       ))}
+      <label class="switch">
+        <input
+          type="checkbox"
+          value={speechInputEnabled.value ? 'true' : 'false'}
+          onClick={() => (speechInputEnabled.value = !speechInputEnabled.value)}
+        />
+        <span class="small-padding">Voice input</span>
+      </label>
     </article>
   );
 };

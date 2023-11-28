@@ -7,7 +7,7 @@ interface StartPart extends CompletionPartBase {
   /**
    * Id of the message this reply is for.
    */
-  replyTo?: { id: number; time: number };
+  replyTo?: { id: number; time: number; text: string };
 
   agent: string;
   time: number;

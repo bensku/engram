@@ -1,13 +1,11 @@
 import { route } from 'preact-router';
 import { responses } from '../types';
-import { currentTopic } from '../state';
+import { currentTopic, topics } from '../state';
 import { MinidenticonImg } from './icon';
 
 export const NavBar = ({
-  topics,
   deleteTopic,
 }: {
-  topics: responses['Topic'][];
   deleteTopic: (id: number) => void;
 }) => {
   return (
@@ -17,7 +15,7 @@ export const NavBar = ({
     >
       <UserCard />
       <NewTopicButton />
-      <TopicList topics={topics} deleteTopic={deleteTopic} />
+      <TopicList topics={topics.value} deleteTopic={deleteTopic} />
     </article>
   );
 };
