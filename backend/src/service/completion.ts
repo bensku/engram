@@ -89,6 +89,42 @@ if (ANYSCALE_API_KEY) {
   );
 }
 
+// Deepinfra hosts several interesting "open source" LLMs (albeit with somewhat questionable privacy guarantees)
+const DEEPINFRA_API_KEY = process.env.DEEPINFRA_API_KEY;
+if (DEEPINFRA_API_KEY) {
+  const apiUrl = 'https://api.deepinfra.com/v1/openai';
+  services['deepinfra:mistrallite'] = openAICompletions(
+    apiUrl,
+    DEEPINFRA_API_KEY,
+    'chat',
+    'amazon/MistralLite',
+  );
+  services['deepinfra:openchat-3.5'] = openAICompletions(
+    apiUrl,
+    DEEPINFRA_API_KEY,
+    'chat',
+    'openchat/openchat_3.5',
+  );
+  services['deepinfra:airoboros-70b'] = openAICompletions(
+    apiUrl,
+    DEEPINFRA_API_KEY,
+    'chat',
+    'deepinfra/airoboros-70b',
+  );
+  services['deepinfra:airoboros-l2-70b'] = openAICompletions(
+    apiUrl,
+    DEEPINFRA_API_KEY,
+    'chat',
+    'jondurbin/airoboros-l2-70b-gpt4-1.4.1',
+  );
+  services['deepinfra:lzlv-70b'] = openAICompletions(
+    apiUrl,
+    DEEPINFRA_API_KEY,
+    'chat',
+    'lizpreciatior/lzlv_70b_fp16_hf',
+  );
+}
+
 export function completionsForModel(model: string): CompletionService {
   const service = services[model];
   if (!service) {
