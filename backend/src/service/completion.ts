@@ -105,6 +105,12 @@ if (DEEPINFRA_API_KEY) {
     'chat',
     'openchat/openchat_3.5',
   );
+  services['deepinfra:mythomax-l2-13b'] = openAICompletions(
+    apiUrl,
+    DEEPINFRA_API_KEY,
+    'chat',
+    'Gryphe/MythoMax-L2-13b',
+  );
   services['deepinfra:airoboros-70b'] = openAICompletions(
     apiUrl,
     DEEPINFRA_API_KEY,

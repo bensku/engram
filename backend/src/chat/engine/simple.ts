@@ -1,0 +1,39 @@
+import { registerEngine } from '../engine';
+import { MODEL, PROMPT, TEMPERATURE } from '../options';
+import { simplePrompt } from '../prompt';
+
+registerEngine(
+  'simple',
+  'Simple',
+  MODEL.create({
+    defaultValue: 'openai:gpt-3.5-turbo',
+    choices: [
+      { value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5 (default)' },
+      { value: 'openai:gpt-4', title: 'GPT-4' },
+      { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
+      { value: 'bedrock:claude-v2', title: 'Claude 2' },
+      { value: 'bedrock:cohere-command', title: 'Cohere Command' },
+      { value: 'anyscale:llama-2-7b', title: 'Llama 2 7B' },
+      { value: 'anyscale:llama-2-13b', title: 'Llama 2 13B' },
+      { value: 'anyscale:llama-2-70b', title: 'Llama 2 70B' },
+      { value: 'anyscale:codellama-34b', title: 'CodeLlama 34B' },
+      { value: 'anyscale:mistral-7b-v0.1', title: 'Mistral 7B v0.1' },
+      { value: 'deepinfra:mistrallite', title: 'MistralLite' },
+      { value: 'deepinfra:openchat-3.5', title: 'OpenChat 3.5' },
+      { value: 'deepinfra:airoboros-70b', title: 'Airoboros 70B' },
+      { value: 'deepinfra:mythomax-l2-13b', title: 'MythoMax 13B' },
+      { value: 'deepinfra:airoboros-l2-70b', title: 'Airoboros 70B L2' },
+      { value: 'deepinfra:lzlv-70b', title: 'LZLV 70B' },
+    ],
+    userEditable: true,
+  }),
+  TEMPERATURE.create({
+    defaultValue: 0.3,
+    start: 0,
+    end: 1,
+    userEditable: true,
+  }),
+  PROMPT.create({
+    defaultValue: simplePrompt('You are a helpful AI assistant.'),
+  }),
+);

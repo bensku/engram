@@ -175,7 +175,9 @@ const SliderField = ({
   value: number;
   onChange: (newValue: number) => void;
 }) => {
-  const [currentValue, setCurrentValue] = useState(value);
+  const [currentValue, setCurrentValue] = useState(0);
+
+  useEffect(() => setCurrentValue(value), [value]);
 
   const fieldRef = useRef<HTMLInputElement>(null);
 
