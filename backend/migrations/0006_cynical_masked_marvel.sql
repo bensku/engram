@@ -1,0 +1,2 @@
+ALTER TABLE "user" ADD COLUMN "ssoId" text NOT NULL;
+ALTER TABLE "user" DROP COLUMN IF EXISTS "email";

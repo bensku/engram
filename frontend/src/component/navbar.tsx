@@ -2,6 +2,8 @@ import { route } from 'preact-router';
 import { responses } from '../types';
 import { currentTopic, topics } from '../state';
 import { MinidenticonImg } from './icon';
+import { useEffect, useState } from 'preact/hooks';
+import { getUserDetails } from '../service/user';
 
 export const NavBar = ({
   deleteTopic,
@@ -21,6 +23,13 @@ export const NavBar = ({
 };
 
 const UserCard = () => {
+  const [user, setUser] = useState<responses['User']>({ name: '' });
+
+  useEffect(() => {
+    void (async () => {
+      setUser((await getUserDetails({})).data);
+    })();
+  }, []);
   return (
     <article class="row container top-align small-padding">
       <button class="transparent circle extra">
@@ -28,11 +37,14 @@ const UserCard = () => {
         <div class="tooltip bottom">Settings</div>
       </button>
       <div class="small-padding vertical">
-        <div class="large-text">Benjami</div>
-        <div class="secondary-text">Administrator</div>
+        <div class="large-text">{user.name}</div>
+        {/* <div class="secondary-text">Administrator</div> */}
       </div>
       <div class="spacer max" />
-      <button class="transparent circle huge">
+      <button
+        class="transparent circle huge"
+        onClick={() => (window.location.href = '/api/auth/logout')}
+      >
         <i class="error-text">logout</i>
         <div class="tooltip bottom">Log out</div>
       </button>
