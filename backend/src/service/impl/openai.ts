@@ -62,9 +62,15 @@ export function openAICompletions(
           }
           yield { type: 'end' };
         } else if (line.startsWith('data: ')) {
-          const part = JSON.parse(
-            line.substring('data: '.length),
-          ) as ChatCompletionPart;
+          let part: ChatCompletionPart;
+          try {
+            part = JSON.parse(
+              line.substring('data: '.length),
+            ) as ChatCompletionPart;
+          } catch (e) {
+            console.error(`Invalid JSON response: ${line}`);
+            throw e;
+          }
           // OpenAI API streams function arguments
           // This is not very useful to us, so we'll yield them as one unit
           const delta = part.choices[0].delta;

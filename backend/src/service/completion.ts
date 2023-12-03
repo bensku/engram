@@ -131,6 +131,54 @@ if (DEEPINFRA_API_KEY) {
   );
 }
 
+const PPLX_API_KEY = process.env.PPLX_API_KEY;
+if (PPLX_API_KEY) {
+  const apiUrl = 'https://api.perplexity.ai';
+  // TODO is this actually compatible with OpenAI API?
+  services['perplexity:codellama-34b'] = openAICompletions(
+    apiUrl,
+    PPLX_API_KEY,
+    'chat',
+    'codellama-34b-instruct',
+  );
+  services['perplexity:llama-2-70b'] = openAICompletions(
+    apiUrl,
+    PPLX_API_KEY,
+    'chat',
+    'llama-2-70b-chat',
+  );
+  services['perplexity:mistral-7b'] = openAICompletions(
+    apiUrl,
+    PPLX_API_KEY,
+    'chat',
+    'mistral-7b-instruct',
+  );
+  services['perplexity:pplx-7b'] = openAICompletions(
+    apiUrl,
+    PPLX_API_KEY,
+    'chat',
+    'pplx-7b-chat',
+  );
+  services['perplexity:pplx-70b'] = openAICompletions(
+    apiUrl,
+    PPLX_API_KEY,
+    'chat',
+    'pplx-70b-chat',
+  );
+  services['perplexity:pplx-7b-online'] = openAICompletions(
+    apiUrl,
+    PPLX_API_KEY,
+    'chat',
+    'pplx-7b-online',
+  );
+  services['perplexity:pplx-70b-online'] = openAICompletions(
+    apiUrl,
+    PPLX_API_KEY,
+    'chat',
+    'pplx-70b-online',
+  );
+}
+
 export function completionsForModel(model: string): CompletionService {
   const service = services[model];
   if (!service) {

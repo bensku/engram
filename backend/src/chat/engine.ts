@@ -1,14 +1,7 @@
 import { ModelOptions } from '../service/completion';
 import { TopicOptions } from '../service/topic';
-import { Tool, getTool, getTools } from '../tool/core';
-import {
-  EngineOption,
-  MODEL,
-  OptionType,
-  PROMPT,
-  TEMPERATURE,
-} from './options';
-import { simplePrompt } from './prompt';
+import { Tool, getTools } from '../tool/core';
+import { EngineOption, TEMPERATURE } from './options';
 
 export interface ChatEngine {
   /**
