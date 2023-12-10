@@ -28,6 +28,7 @@ registerEngine(
       { value: 'deepinfra:mythomax-l2-13b', title: 'MythoMax 13B' },
       { value: 'deepinfra:airoboros-l2-70b', title: 'Airoboros 70B L2' },
       { value: 'deepinfra:lzlv-70b', title: 'LZLV 70B' },
+      { value: 'selfhosted:tabby-api', title: 'Selfhosted experiment' },
     ],
     userEditable: true,
   }),

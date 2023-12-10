@@ -9,7 +9,7 @@ import { TtsService } from '../tts';
 export function openAICompletions(
   apiUrl: string,
   apiKey: string,
-  type: 'text' | 'chat',
+  type: 'chat' | 'chatml',
   model: string,
 ): CompletionService {
   const headers = {
@@ -17,10 +17,7 @@ export function openAICompletions(
     'Content-Type': 'application/json',
   };
 
-  if (type == 'text') {
-    throw new Error('unimplemented');
-    // return async function* () {};
-  } else {
+  if (type == 'chat') {
     return async function* (context, options) {
       const body: paths['/chat/completions']['post']['requestBody']['content']['application/json'] =
         {
@@ -100,6 +97,48 @@ export function openAICompletions(
         }
       }
     };
+  } else if (type == 'chatml') {
+    return async function* (context, options) {
+      const body: paths['/completions']['post']['requestBody']['content']['application/json'] =
+        {
+          stream: true,
+          model,
+          prompt: chatMlPrompt(context),
+          temperature: options.temperature,
+          max_tokens: options.maxTokens,
+          stop: ['user'],
+        };
+      const response = await fetch(`${apiUrl}/completions`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers,
+      });
+      const reader = (
+        response.body as unknown as ReadableStream<Uint8Array>
+      ).getReader();
+
+      for await (const line of readLines(reader)) {
+        if (line.trim() == 'data: [DONE]') {
+          yield { type: 'end' };
+        } else if (line.startsWith('data: ')) {
+          let part: TextCompletionPart;
+          try {
+            part = JSON.parse(
+              line.substring('data: '.length),
+            ) as TextCompletionPart;
+          } catch (e) {
+            console.error(`Invalid JSON response: ${line}`);
+            throw e;
+          }
+          yield { type: 'text', text: part.choices[0].text };
+        } else if (line.length > 0) {
+          // Probably an error, better log it
+          console.error(line);
+        }
+      }
+    };
+  } else {
+    throw new Error('unknown completions type');
   }
 }
 
@@ -178,6 +217,33 @@ interface ChatCompletionPart {
     delta: { content?: string; tool_calls: GptToolCall[] };
     index: number;
     finish_reason: string | null;
+  }[];
+}
+
+function chatMlPrompt(context: Message[]): string {
+  return (
+    context.map(formatChatMlMessage).join('\n') + '\n<|im_start|>assistant\n'
+  );
+}
+
+function formatChatMlMessage(msg: Message) {
+  let source;
+  if (msg.type == 'bot') {
+    source = 'assistant';
+  } else if (msg.type == 'user') {
+    source = 'user';
+  } else if (msg.type == 'system') {
+    source = 'system';
+  } else {
+    throw new Error('tools are not yet supported for ChatML');
+  }
+  return `<|im_start|>${source}\n${msg.text ?? ''}<|im_end|>`;
+}
+
+interface TextCompletionPart {
+  choices: {
+    text: string;
+    index: 0;
   }[];
 }
 

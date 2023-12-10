@@ -179,6 +179,17 @@ if (PPLX_API_KEY) {
   );
 }
 
+// Quick hack to support self-hosted models
+const TABBY_API_ENDPOINT = process.env.TABBY_API_ENDPOINT;
+if (TABBY_API_ENDPOINT) {
+  services['selfhosted:tabby-api'] = openAICompletions(
+    TABBY_API_ENDPOINT,
+    'local',
+    'chatml',
+    process.env.TABBY_API_MODEL ?? '',
+  );
+}
+
 export function completionsForModel(model: string): CompletionService {
   const service = services[model];
   if (!service) {
