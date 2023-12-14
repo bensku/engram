@@ -2,6 +2,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { ToolParser, ToolPromptSource } from './api';
 import { ToolCall } from '../call';
 import { Tool } from '../core';
+import { getSortedArgs } from './util';
 
 export class XmlPromptSource implements ToolPromptSource {
   systemPrompt(tools: Tool<object>[]): string {
@@ -65,18 +66,6 @@ ${Object.entries(call.arguments)
 ${calls.map((call) => this.stringifyCall(call)).join('\n')}
 </tool_calls>`;
   }
-}
-
-function getSortedArgs(
-  tool: Tool<object>,
-): [string, { type: string; description: string }][] {
-  const argsProps = tool.argsSchema.properties as Record<
-    string,
-    { type: string; description: string }
-  >;
-  const args = Object.entries(argsProps);
-  args.sort(([a], [b]) => (a < b ? -1 : 1));
-  return args;
 }
 
 const XML_PARSER = new XMLParser();

@@ -13,6 +13,11 @@ registerEngine(
       { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
       { value: 'bedrock:claude-v2', title: 'Claude 2' },
       { value: 'bedrock:cohere-command', title: 'Cohere Command' },
+      { value: 'together:mixtral-8x7', title: 'Mixtral 8x7B' },
+      {
+        value: 'together:openhermes-2.5-mistral',
+        title: 'OpenHermes 2.5 Mistral',
+      },
       { value: 'perplexity:pplx-7b', title: 'Perplexity 7B' },
       { value: 'perplexity:pplx-7b-online', title: 'Perplexity 7B (online)' },
       { value: 'perplexity:pplx-70b', title: 'Perplexity 70B' },

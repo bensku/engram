@@ -13,6 +13,7 @@ registerEngine(
       { value: 'openai:gpt-4', title: 'GPT-4' },
       { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
       { value: 'bedrock:claude-v2', title: 'Claude 2' },
+      { value: 'engram:amalgam', title: 'Amalgam' },
     ],
     userEditable: true,
   }),

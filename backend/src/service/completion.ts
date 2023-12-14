@@ -1,7 +1,9 @@
 import { ToolCall } from '../tool/call';
 import { Tool } from '../tool/core';
+import { amalgamCompletions } from './impl/amalgam';
 import { bedrockCompletions } from './impl/bedrock';
 import { openAICompletions } from './impl/openai';
+import { togetherCompletions } from './impl/together';
 import { Message } from './message';
 
 export type CompletionPart =
@@ -18,6 +20,11 @@ export type BatchCompletionService = (
   context: Message[],
   options: ModelOptions,
 ) => Promise<string>;
+
+export type ToolCompletionService = (
+  context: Message[],
+  options: ModelOptions,
+) => Promise<ToolCall[]>;
 
 const services: Record<string, CompletionService> = {};
 
@@ -131,10 +138,10 @@ if (DEEPINFRA_API_KEY) {
   );
 }
 
+// Perplexity has several interesting custom models
 const PPLX_API_KEY = process.env.PPLX_API_KEY;
 if (PPLX_API_KEY) {
   const apiUrl = 'https://api.perplexity.ai';
-  // TODO is this actually compatible with OpenAI API?
   services['perplexity:codellama-34b'] = openAICompletions(
     apiUrl,
     PPLX_API_KEY,
@@ -179,6 +186,26 @@ if (PPLX_API_KEY) {
   );
 }
 
+// Together AI hosts a huge amount of open source models with good performance
+const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+if (TOGETHER_API_KEY) {
+  services['together:mixtral-8x7'] = togetherCompletions(
+    TOGETHER_API_KEY,
+    'mistral',
+    'mistralai/Mixtral-8x7B-Instruct-v0.1',
+  );
+  services['together:openhermes-2.5-mistral'] = togetherCompletions(
+    TOGETHER_API_KEY,
+    'chatml',
+    'teknium/OpenHermes-2p5-Mistral-7B',
+  );
+  services['together:nexusraven-v2'] = togetherCompletions(
+    TOGETHER_API_KEY,
+    'nexusraven',
+    'Nexusflow/NexusRaven-V2-13B',
+  );
+}
+
 // Quick hack to support self-hosted models
 const TABBY_API_ENDPOINT = process.env.TABBY_API_ENDPOINT;
 if (TABBY_API_ENDPOINT) {
@@ -217,8 +244,30 @@ export function batchCompletionsForModel(
   };
 }
 
+export function toolCompletionsForModel(model: string): ToolCompletionService {
+  const completions = completionsForModel(model);
+  return async (context, options) => {
+    for await (const part of completions(context, options)) {
+      if (part.type == 'end') {
+        return []; // No tool calls
+      } else if (part.type == 'tool') {
+        return part.calls;
+      } else {
+        throw new Error('tool completions do not support text output');
+      }
+    }
+    throw new Error('missing end part');
+  };
+}
+
 export interface ModelOptions {
   temperature?: number;
   maxTokens?: number;
   enabledTools?: Tool<object>[];
 }
+
+// TODO figure out to gate these behind service availability
+services['engram:amalgam'] = amalgamCompletions(
+  'together:mixtral-8x7',
+  'together:nexusraven-v2',
+);

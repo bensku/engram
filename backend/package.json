@@ -2,7 +2,7 @@
   "name": "@bensku/engram-backend",
   "description": "",
   "scripts": {
-    "openapi-clients": "concurrently 'openapi-typescript vendor/schema/openai.yaml --output generated/openai.d.ts' 'openapi-typescript vendor/schema/qdrant.json --output generated/qdrant.d.ts'",
+    "openapi-clients": "concurrently 'openapi-typescript vendor/schema/openai.yaml --output generated/openai.d.ts' 'openapi-typescript vendor/schema/qdrant.json --output generated/qdrant.d.ts' 'openapi-typescript vendor/schema/together.yaml --output generated/together.d.ts'",
     "routes": "tsoa spec-and-routes",
     "postinstall": "npm run openapi-clients && npm run routes",
     "dev": "concurrently 'nodemon --config nodemon.app.json' 'nodemon --config nodemon.tsoa.json'",

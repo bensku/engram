@@ -20,6 +20,11 @@ export interface Tool<T extends object> {
   description: string;
 
   /**
+   * Description of the result. Only used by some tool call systems.
+   */
+  result: string;
+
+  /**
    * Schema for telling LLM about function arguments and validating them.
    */
   argsSchema: JSONSchemaType<T>;
