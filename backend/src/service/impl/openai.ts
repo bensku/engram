@@ -61,11 +61,12 @@ export function openAICompletions(
         } else if (line.startsWith('data: ')) {
           let part: ChatCompletionPart;
           try {
+            // FIXME perplexity API seems to return line breaks, is readLines() bugged?
             part = JSON.parse(
               line.substring('data: '.length),
             ) as ChatCompletionPart;
           } catch (e) {
-            console.error(`Invalid JSON response: ${line}`);
+            console.error(`Invalid JSON response: '${line}'`);
             throw e;
           }
           // OpenAI API streams function arguments

@@ -3,6 +3,7 @@ import { Message, MessageStorage } from '../service/message';
 import { TopicOptions } from '../service/topic';
 import { ChatEngine } from './engine';
 import { PROMPT, SPEECH_MODE } from './options';
+import { promptMessages } from './prompt';
 
 const storage: MessageStorage = new DbMessageStorage();
 
@@ -16,7 +17,10 @@ export async function topicContext(
   options: TopicOptions,
 ): Promise<Message[]> {
   let context = (await storage.get(topicId)) ?? [];
-  context = [...PROMPT.getOrThrow(engine, {}), ...context];
+  context = [
+    ...promptMessages(PROMPT.getOrThrow(engine, {}), engine, options),
+    ...context,
+  ];
 
   if (SPEECH_MODE.get(engine, options.options)) {
     context[0] = {

@@ -1,6 +1,5 @@
 import { registerEngine } from '../engine';
 import { MODEL, PROMPT, TEMPERATURE } from '../options';
-import { simplePrompt } from '../prompt';
 
 registerEngine(
   'simple',
@@ -44,6 +43,6 @@ registerEngine(
     userEditable: true,
   }),
   PROMPT.create({
-    defaultValue: simplePrompt('You are a helpful AI assistant.'),
+    defaultValue: { default: ['You are a helpful AI assistant.'] },
   }),
 );

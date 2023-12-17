@@ -16,7 +16,7 @@ export const TopicOptions = ({
   )?.options;
   const overrides = currentTopic.value.options ?? {};
   return (
-    <article class="max tiny-margin no-round topic-options">
+    <article class="max tiny-margin no-round topic-options vertical">
       <h6 class="center-align">Topic options</h6>
       <EngineSelection
         options={engines.value}

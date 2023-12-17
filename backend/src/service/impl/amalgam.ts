@@ -1,22 +1,24 @@
+import { XmlPromptSource } from '../../tool/prompt/xml';
 import {
   CompletionPart,
   CompletionService,
   ModelOptions,
+  batchCompletionsForModel,
   completionsForModel,
-  toolCompletionsForModel,
 } from '../completion';
+import { Message } from '../message';
 
 /**
  * Creates a completion service that is an amalgamation of several models.
  * @param chatModel The normal chat completion model.
- * @param toolModel Specialized tool (function) calling model.
+ * @param toolModel Chat model for tool calls.
  */
 export function amalgamCompletions(
   chatModel: string,
   toolModel: string,
 ): CompletionService {
   const chatSvc = completionsForModel(chatModel);
-  const toolSvc = toolCompletionsForModel(toolModel);
+  const toolSvc = batchCompletionsForModel(toolModel);
   return async function* (context, options) {
     if (context.length > 0 && context[context.length - 1].type == 'tool') {
       // Tool message; don't feed this as user input to reworder or tool models
@@ -27,11 +29,23 @@ export function amalgamCompletions(
     }
 
     const noTools: ModelOptions = { ...options, enabledTools: undefined };
+    const lastMsg = context[context.length - 1];
 
     let callsFinished = false;
     let chatFinished = false;
 
-    const chatGenerator = chatSvc(context, noTools);
+    const chatGenerator = chatSvc(
+      [
+        {
+          ...context[0],
+          text: `${context[0].text ?? ''}
+Aside of just talking with me, you can:
+${options.enabledTools?.map((tool) => `* ${tool.purpose}`).join('\n') ?? ''}`,
+        },
+        ...context.slice(1),
+      ],
+      noTools,
+    );
     const pregenParts: CompletionPart[] = [];
     const pregenPromise = (async () => {
       for (;;) {
@@ -49,11 +63,37 @@ export function amalgamCompletions(
       }
     })();
 
-    const calls = await toolSvc(context.slice(1), {
-      temperature: 0.001,
+    const toolCtx: Message[] = [
+      {
+        type: 'system',
+        id: 0,
+        time: Date.now(),
+        text: 'You are an AI assistant specialized in using external tools. Based on the conversation presented below, you should decice which (if any) external tool would be appropriate.',
+      },
+      ...context.slice(1, context.length - 1),
+      {
+        ...lastMsg,
+        text: `${lastMsg.text ?? ''}
+
+END DIALOGUE
+
+It is time to plan how to best respond to user's message above.
+
+${TOOL_PROMPTER.systemPrompt(options.enabledTools ?? [])}
+
+If you don't want to call a tool, reply with "NO_CALL". In any case, justify why did you call or not call the tools!`,
+      },
+    ];
+    const reply = await toolSvc(toolCtx, {
+      temperature: 0.1,
       maxTokens: 512,
       enabledTools: options.enabledTools,
     });
+    console.log('should_call?', `'${reply}'`);
+    const toolParser = TOOL_PROMPTER.newParser();
+    toolParser.append(reply.replaceAll('\\', ''));
+    const calls = toolParser.parse();
+    console.log(calls);
 
     callsFinished = true;
     if (calls.length > 0) {
@@ -78,3 +118,5 @@ export function amalgamCompletions(
     }
   };
 }
+
+const TOOL_PROMPTER = new XmlPromptSource(false);

@@ -1,6 +1,5 @@
 import { registerEngine } from '../engine';
 import { MODEL, PROMPT, TEMPERATURE } from '../options';
-import { simplePrompt } from '../prompt';
 
 // Experimental and/or toy chat engines
 
@@ -14,8 +13,10 @@ registerEngine(
     defaultValue: 0.8,
   }),
   PROMPT.create({
-    defaultValue: simplePrompt(
-      'You are Pirate, a helpful little pirate that loves traveling around the world. Be sure to speak like pirate!',
-    ),
+    defaultValue: {
+      default: [
+        'You are Pirate, a helpful little pirate that loves traveling around the world. Be sure to speak like pirate!',
+      ],
+    },
   }),
 );

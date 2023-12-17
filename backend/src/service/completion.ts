@@ -192,6 +192,11 @@ if (TOGETHER_API_KEY) {
   services['together:mixtral-8x7'] = togetherCompletions(
     TOGETHER_API_KEY,
     'mistral',
+    'mistralai/Mistral-7B-Instruct-v0.2',
+  );
+  services['together:mistral-7b'] = togetherCompletions(
+    TOGETHER_API_KEY,
+    'mistral',
     'mistralai/Mixtral-8x7B-Instruct-v0.1',
   );
   services['together:openhermes-2.5-mistral'] = togetherCompletions(
@@ -269,5 +274,5 @@ export interface ModelOptions {
 // TODO figure out to gate these behind service availability
 services['engram:amalgam'] = amalgamCompletions(
   'together:mixtral-8x7',
-  'together:nexusraven-v2',
+  'together:mistral-7b',
 );

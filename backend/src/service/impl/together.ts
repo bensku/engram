@@ -1,10 +1,11 @@
 import { ReadableStream } from 'stream/web';
 import { CompletionService } from '../completion';
-import { components, paths } from '../../../generated/together';
+import { paths } from '../../../generated/together';
 import { Message } from '../message';
 import { readLines } from '@bensku/engram-shared/src/sse';
 import { Tool } from '../../tool/core';
 import { RavenPromptSource } from '../../tool/prompt/raven';
+import { XmlPromptSource } from '../../tool/prompt/xml';
 
 export function togetherCompletions(
   apiKey: string,
@@ -76,25 +77,31 @@ type PromptFormatter = (context: Message[], tools: Tool<object>[]) => string;
 const PROMPT_FORMATTERS: Record<PromptStyle, PromptFormatter> = {
   mistral: (context) => {
     // <s> [INST] Instruction [/INST] Model answer</s> [INST] Follow-up instruction [/INST]
-    return (
-      `<s> [INST] ${context[0].text ?? ''}\n\nBEGIN DIALOGUE\n\n${
-        context[1].text ?? ''
-      } [/INST]` +
-      context
-        .slice(2)
-        .map((msg) => {
-          if (msg.type == 'bot') {
-            return `${
-              msg.text ?? RAVEN_PROMPTER.toolMessage(msg.toolCalls ?? [])
-            }</s>`;
-          } else if (msg.type == 'tool') {
-            return `[INST] ${msg.text} [/INST]`; // TODO format
-          } else if (msg.type == 'user') {
-            return `[INST] ${msg.text} [/INST]`;
-          }
-        })
-        .join(' ')
-    );
+    let prompt = `<s> [INST] ${context[0].text ?? ''}\n\n${
+      context[1].text ?? ''
+    } [/INST]`;
+    for (let i = 2; i < context.length; i++) {
+      const msg = context[i];
+      if (msg.type == 'bot') {
+        prompt += ` ${
+          msg.toolCalls
+            ? XML_PROMPTER.toolMessage(msg.toolCalls)
+            : msg.text ?? ''
+        }</s>`;
+      } else if (msg.type == 'tool') {
+        prompt += ` [INST] <tool_results>
+${msg.text}
+</tool_results>`;
+        if (i == context.length - 1) {
+          // Include the user message again if we're supposed to answer it now
+          prompt += `\n---\n${context[i - 2].text ?? ''}`;
+        }
+        prompt += ' [/INST]';
+      } else if (msg.type == 'user') {
+        prompt += ` [INST] ${msg.text} [/INST]`;
+      }
+    }
+    return prompt;
   },
 
   nexusraven: (context, tools) => {
@@ -151,6 +158,7 @@ const STOP_TOKENS: Record<PromptStyle, string> = {
 };
 
 const RAVEN_PROMPTER = new RavenPromptSource();
+const XML_PROMPTER = new XmlPromptSource(false);
 
 interface CompletionPart {
   choices: {

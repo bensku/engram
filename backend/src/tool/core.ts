@@ -14,15 +14,28 @@ export interface Tool<T extends object> {
   name: string;
 
   /**
+   * Purpose of this tool. This is used for telling the amalgam non-tool
+   * calling model that it can do this.
+   */
+  purpose: string;
+
+  /**
    * Description of the tool for LLM purposes. If the LLM doesn't need to know
    * something, put it to comments instead.
    */
   description: string;
 
   /**
-   * Description of the result. Only used by some tool call systems.
+   * Description of the result.
+   * Note that this is not used by all tool call systems.
    */
   result: string;
+
+  /**
+   * Guidance about using this tool.
+   * Note that this is not used by all tool call systems.
+   */
+  guidance: string;
 
   /**
    * Schema for telling LLM about function arguments and validating them.

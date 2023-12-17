@@ -47,6 +47,8 @@ export async function* readLines(reader: StreamReader) {
 
   // Final line
   if (data.length > 0) {
-    yield decoder.decode(data);
+    for (const line of decoder.decode(data).split('\n')) {
+      yield line;
+    }
   }
 }

@@ -5,7 +5,25 @@ import { Tool } from '../core';
 import { getSortedArgs } from './util';
 
 export class XmlPromptSource implements ToolPromptSource {
+  constructor(private claudeXml: boolean) {}
+
   systemPrompt(tools: Tool<object>[]): string {
+    let toolsDesc: string;
+    if (this.claudeXml) {
+      toolsDesc = `Here are the tools available:
+<tools>
+${tools.map((tool) => this.toolToPrompt(tool)).join('\n')}
+</tools>
+You decide when to call tools. It is ok to call multiple tools, including calling one tool many times. It is also ok to not call any tool if they don't seem relevant.
+
+When calling a tool, don't tell the user about it - just do it!`;
+    } else {
+      toolsDesc = `Here are the tools available:
+${tools.map((tool) => this.toolToPrompt(tool)).join('\n\n')}
+
+You decide when to call tools. It is ok to call multiple tools, including calling one tool many times. It is also ok to not call any tool if they don't seem relevant.`;
+    }
+
     return `You have access to a set of tools you can use to answer the user's question or act on their behalf.
 
 You may call them like this:
@@ -19,17 +37,36 @@ You may call them like this:
 </invoke>
 </tool_calls>
 
-Here are the tools available:
-<tools>
-${tools.map((tool) => this.toolToPrompt(tool)).join('\n')}
-</tools>
-You decide when to call tools. It is ok to call multiple tools, including calling one tool many times. It is also ok to not call any tool if they don't seem relevant.
+${toolsDesc}
 
-When calling a tool, don't tell the user about it - just do it!`;
+Consider CAREFULLY whether or not you should use a tool. Here is some general guidance:
+${tools.map((tool) => `* ${tool.guidance}`).join('\n')}
+* If the user is just chatting with you, don't use a tool
+* If you don't know what to do, don't use a tool
+
+When calling a tool, don't tell the user about it - just do it!
+
+For example, to call example_tool twice, you could write:
+<tool_calls>
+<invoke>
+<tool_name>example_tool</tool_name>
+<parameters>
+<example_argument>Hello!</example_argument>
+<another>Second argument!</another>
+</parameters>
+</invoke>
+<tool_name>example_tool</tool_name>
+<parameters>
+<example_argument>Second call!</example_argument>
+<another>And the second argument of it</another>
+</parameters>
+</invoke>
+</tool_calls>`;
   }
 
   toolToPrompt(tool: Tool<object>): string {
-    return `<tool>
+    if (this.claudeXml) {
+      return `<tool>
 <tool_name>${tool.name}</tool_name>
 <description>${tool.description}</description>
 <parameters>
@@ -44,6 +81,15 @@ ${getSortedArgs(tool)
   .join('\n')}
 </parameters>
 </tool>`;
+    } else {
+      return `Tool ${tool.name}:
+${tool.description}
+Parameters:
+${getSortedArgs(tool)
+  .map(([name, { type, description }]) => `  ${name} (${type}): ${description}`)
+  .join('\n')}
+Result: ${tool.result}`;
+    }
   }
 
   newParser(): ToolParser {
@@ -134,7 +180,9 @@ class XmlToolParser implements ToolParser {
     };
     const tree = XML_PARSER.parse(this.buf) as Tree;
     let invoke = tree.tool_calls.invoke;
-    if (!Array.isArray(invoke)) {
+    if (!invoke) {
+      return []; // Empty tool_calls tag, can happen with some LLMs...
+    } else if (!Array.isArray(invoke)) {
       invoke = [invoke];
     }
     return invoke.map((invoke) => ({

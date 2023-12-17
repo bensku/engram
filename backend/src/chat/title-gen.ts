@@ -1,7 +1,6 @@
 import { batchCompletionsForModel } from '../service/completion';
 import { DbTopicStorage } from '../service/impl/postgres';
 import { Message } from '../service/message';
-import { simplePrompt } from './prompt';
 
 const TITLE_PROMPT = `Generate a a short (few words) title of the above conversation.
 
@@ -21,7 +20,12 @@ const titleGenerator = batchCompletionsForModel('openai:gpt-3.5-turbo');
 
 export async function generateTitle(context: Message[]): Promise<string> {
   const titleCtx: Message[] = [
-    ...simplePrompt('You are a title generation bot for an AI assistant.'),
+    {
+      type: 'system',
+      id: 0,
+      time: Date.now(),
+      text: 'You are a title generation bot for an AI assistant.',
+    },
     ...context.slice(1),
     {
       type: 'user',

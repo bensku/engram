@@ -1,5 +1,6 @@
 import { Message } from '../service/message';
 import { ChatEngine } from './engine';
+import { Prompt } from './prompt';
 
 interface BaseEngineOption<T> {
   id: string;
@@ -92,7 +93,7 @@ export const MODEL = new OptionType<SelectOption>(
   'Chat model',
 );
 
-export const PROMPT = new OptionType<UnknownOption<Message[]>>(
+export const PROMPT = new OptionType<UnknownOption<Prompt>>(
   'unknown',
   'prompt',
   'Prompt',

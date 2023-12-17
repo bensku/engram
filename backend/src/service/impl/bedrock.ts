@@ -10,7 +10,7 @@ import { XmlPromptSource } from '../../tool/prompt/xml';
 const CLIENT = new BedrockRuntimeClient();
 const TEXT_DECODER = new TextDecoder();
 
-const TOOL_PROMPTER = new XmlPromptSource();
+const TOOL_PROMPTER = new XmlPromptSource(true);
 
 export function bedrockCompletions(
   model: string,

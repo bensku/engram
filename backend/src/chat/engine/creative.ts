@@ -1,6 +1,5 @@
 import { registerEngine } from '../engine';
 import { MODEL, PROMPT, TEMPERATURE } from '../options';
-import { simplePrompt } from '../prompt';
 
 const SYSTEM = `You are Fable, a creative writing assistant.
 
@@ -29,6 +28,6 @@ registerEngine(
     userEditable: true,
   }),
   PROMPT.create({
-    defaultValue: simplePrompt(SYSTEM),
+    defaultValue: { default: [SYSTEM] },
   }),
 );

@@ -1,6 +1,5 @@
 import { registerEngine } from '../engine';
 import { MODEL, PROMPT, TEMPERATURE } from '../options';
-import { simplePrompt } from '../prompt';
 
 registerEngine(
   'coding',
@@ -21,8 +20,10 @@ registerEngine(
     userEditable: true,
   }),
   PROMPT.create({
-    defaultValue: simplePrompt(
-      'You are Rune, an assistant to a professional software developer.',
-    ), // TODO
+    defaultValue: {
+      default: [
+        'You are Rune, an assistant to a professional software developer.', // TODO
+      ],
+    },
   }),
 );
