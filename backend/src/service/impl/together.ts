@@ -29,7 +29,7 @@ export function togetherCompletions(
           prompt: formatter(context, options.enabledTools ?? []),
           temperature: options.temperature,
           max_tokens: options.maxTokens,
-          stop: STOP_TOKENS[promptStyle],
+          stop: options.stopTokens?.at(0) ?? STOP_TOKENS[promptStyle],
         },
       },
     };
@@ -77,9 +77,14 @@ type PromptFormatter = (context: Message[], tools: Tool<object>[]) => string;
 const PROMPT_FORMATTERS: Record<PromptStyle, PromptFormatter> = {
   mistral: (context) => {
     // <s> [INST] Instruction [/INST] Model answer</s> [INST] Follow-up instruction [/INST]
-    let prompt = `<s> [INST] ${context[0].text ?? ''}\n\n${
-      context[1].text ?? ''
-    } [/INST]`;
+    let prompt;
+    if (context[0].type == 'system') {
+      prompt = `<s> [INST] ${context[0].text ?? ''}\n\n${
+        context[1].text ?? ''
+      } [/INST]`;
+    } else {
+      prompt = `<s> [INST] ${context[0].text ?? ''} [/INST]`;
+    }
     for (let i = 2; i < context.length; i++) {
       const msg = context[i];
       if (msg.type == 'bot') {

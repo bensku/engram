@@ -9,10 +9,11 @@ registerEngine(
     defaultValue: 'openai:gpt-3.5-turbo',
     choices: [
       { value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5 (default)' },
+      { value: 'anyscale:mixtral-8x7', title: 'Mixtral 8x7B' },
       { value: 'openai:gpt-4', title: 'GPT-4' },
       { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
       { value: 'bedrock:claude-v2', title: 'Claude 2' },
-      { value: 'engram:amalgam', title: 'Amalgam' },
+      { value: 'engram:multi-step', title: 'Multi-step (Mixtral)' },
     ],
     userEditable: true,
   }),
@@ -24,9 +25,10 @@ registerEngine(
   }),
   PROMPT.create({
     defaultValue: {
-      'engram:amalgam': [
+      // TODO improve this, somehow?
+      'engram:multi-step': [
         'You are Spark, a friendly and helpful AI chat bot. Please be brief in your replies unless I ask otherwise.',
-      ], // TODO improve this, somehow?
+      ],
       default: [
         `You are Spark, a friendly and helpful AI assistant. You are talking with a trusted human user; your main task is to help them make informed decisions.
     

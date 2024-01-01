@@ -2,6 +2,7 @@ import { ToolCall } from '../tool/call';
 import { Tool } from '../tool/core';
 import { amalgamCompletions } from './impl/amalgam';
 import { bedrockCompletions } from './impl/bedrock';
+import { multiStepCompletions } from './impl/multi-step';
 import { openAICompletions } from './impl/openai';
 import { togetherCompletions } from './impl/together';
 import { Message } from './message';
@@ -93,6 +94,12 @@ if (ANYSCALE_API_KEY) {
     ANYSCALE_API_KEY,
     'chat',
     'mistralai/Mistral-7B-Instruct-v0.1',
+  );
+  services['anyscale:mixtral-8x7'] = openAICompletions(
+    apiUrl,
+    ANYSCALE_API_KEY,
+    'chat',
+    'mistralai/Mixtral-8x7B-Instruct-v0.1',
   );
 }
 
@@ -269,10 +276,12 @@ export interface ModelOptions {
   temperature?: number;
   maxTokens?: number;
   enabledTools?: Tool<object>[];
+  stopTokens?: string[];
 }
 
 // TODO figure out to gate these behind service availability
-services['engram:amalgam'] = amalgamCompletions(
-  'together:mixtral-8x7',
+services['engram:multi-step'] = multiStepCompletions(
   'together:mistral-7b',
+  'together:mixtral-8x7',
+  'together:mixtral-8x7',
 );

@@ -74,7 +74,8 @@ export function openAICompletions(
           const delta = part.choices[0].delta;
           if (delta.tool_calls) {
             for (const callDelta of delta.tool_calls) {
-              let partial = partialCalls[callDelta.index];
+              const callIndex = callDelta.index ?? 0; // Some OpenAI API clones only support one call
+              let partial = partialCalls[callIndex];
               if (!partial) {
                 // First delta for the tool includes its name and call id
                 partial = {
@@ -82,7 +83,7 @@ export function openAICompletions(
                   callId: callDelta.id ?? '',
                   partialArgs: callDelta.function.arguments,
                 };
-                partialCalls[callDelta.index] = partial;
+                partialCalls[callIndex] = partial;
               } else {
                 // Rest of the deltas only include (streamed) function arguments
                 partial.partialArgs += callDelta.function.arguments;
@@ -204,7 +205,7 @@ function toolList(
 }
 
 interface GptToolCall {
-  index: number;
+  index?: number;
   id?: string;
   type?: string;
   function: {

@@ -7,7 +7,8 @@ const SCHEMA: JSONSchemaType<{ location: string }> = {
   properties: {
     location: {
       type: 'string',
-      description: 'Location, e.g. a city or municipality name.',
+      description:
+        'Location, e.g. a city or municipality name. Expand shorthand names (e.g. airport identifiers) to full place names.',
     },
   },
   required: ['location'],
@@ -44,6 +45,7 @@ registerTool({
 const API_KEY = process.env.OPENWEATHERMAP_KEY ?? '';
 
 async function callApi(location: string) {
+  // FIXME find a better geocoding API, this one expects the location to be in City,Country format
   const coords = (await (
     await fetch(
       `https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${API_KEY}`,
@@ -66,7 +68,7 @@ async function callApi(location: string) {
   return `
 Current Weather at ${resolvedLoc}:
 Temperature: ${current.main.temp} °C (feels like ${current.main.feels_like} °C)
-Weather: ${current.weather.description}
+Weather: ${current.weather[0].description}
 Wind speed: ${current.wind.speed} m/s  (gusts ${current.wind.gust} m/s)
 Probability of precipitation: ${current.pop * 100}%
 Average visibility: ${current.visibility} m
@@ -81,7 +83,7 @@ ${forecast.list.map(printEntry).join('\n\n')}
 function printEntry(entry: WeatherEntry) {
   return `${new Date(entry.dt * 1000).toDateString()}:
   Temperature: ${entry.main.temp} °C (feels like ${entry.main.feels_like} °C)
-  Weather: ${entry.weather.description}
+  Weather: ${entry.weather[0].description}
   Wind speed: ${entry.wind.speed} m/s  (gusts ${entry.wind.gust} m/s)
   Probability of precipitation: ${entry.pop * 100}%
   Average visibility: ${entry.visibility} m`;
@@ -98,7 +100,7 @@ type GeocodeResult = {
 interface WeatherEntry {
   dt: number;
   main: { temp: number; feels_like: number };
-  weather: { main: string; description: string };
+  weather: { main: string; description: string }[];
   clouds: { all: number };
   wind: { speed: number; gust: number };
   visibility: number;
