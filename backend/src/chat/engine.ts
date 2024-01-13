@@ -49,7 +49,7 @@ export function toModelOptions(
 
   return {
     temperature: TEMPERATURE.getOrThrow(engine, options.options),
-    maxTokens: 1000,
+    maxTokens: 2000,
     enabledTools,
   };
 }

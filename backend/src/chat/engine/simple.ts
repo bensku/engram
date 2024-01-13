@@ -12,6 +12,7 @@ registerEngine(
       { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
       { value: 'bedrock:claude-v2', title: 'Claude 2' },
       { value: 'bedrock:cohere-command', title: 'Cohere Command' },
+      { value: 'mistral:medium', title: 'mistral-medium' },
       { value: 'together:mixtral-8x7', title: 'Mixtral 8x7B' },
       {
         value: 'together:openhermes-2.5-mistral',

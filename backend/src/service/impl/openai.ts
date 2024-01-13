@@ -9,7 +9,7 @@ import { TtsService } from '../tts';
 export function openAICompletions(
   apiUrl: string,
   apiKey: string,
-  type: 'chat' | 'chatml',
+  type: 'chat' | 'chatml' | 'mistral',
   model: string,
 ): CompletionService {
   const headers = {
@@ -17,17 +17,19 @@ export function openAICompletions(
     'Content-Type': 'application/json',
   };
 
-  if (type == 'chat') {
+  if (type == 'chat' || type == 'mistral') {
     return async function* (context, options) {
-      const body: paths['/chat/completions']['post']['requestBody']['content']['application/json'] =
-        {
-          stream: true,
-          model,
-          messages: context.map(chatGptMessage),
-          temperature: options.temperature,
-          max_tokens: options.maxTokens,
-          tools: toolList(options),
-        };
+      const body: paths['/chat/completions']['post']['requestBody']['content']['application/json'] & {
+        safe_mode?: boolean;
+      } = {
+        stream: true,
+        model,
+        messages: context.map(chatGptMessage),
+        temperature: options.temperature,
+        max_tokens: options.maxTokens,
+        tools: toolList(options),
+        safe_mode: type == 'mistral' ? false : undefined,
+      };
       const response = await fetch(`${apiUrl}/chat/completions`, {
         method: 'POST',
         body: JSON.stringify(body),

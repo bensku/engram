@@ -218,6 +218,30 @@ if (TOGETHER_API_KEY) {
   );
 }
 
+// Mistral API
+const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
+if (MISTRAL_API_KEY) {
+  const apiUrl = 'https://api.mistral.ai/v1/';
+  services['mistral:tiny'] = openAICompletions(
+    apiUrl,
+    MISTRAL_API_KEY,
+    'mistral',
+    'mistral-tiny',
+  );
+  services['mistral:small'] = openAICompletions(
+    apiUrl,
+    MISTRAL_API_KEY,
+    'mistral',
+    'mistral-small',
+  );
+  services['mistral:medium'] = openAICompletions(
+    apiUrl,
+    MISTRAL_API_KEY,
+    'mistral',
+    'mistral-medium',
+  );
+}
+
 // Quick hack to support self-hosted models
 const TABBY_API_ENDPOINT = process.env.TABBY_API_ENDPOINT;
 if (TABBY_API_ENDPOINT) {
