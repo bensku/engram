@@ -1,6 +1,5 @@
 import { ToolCall } from '../tool/call';
 import { Tool } from '../tool/core';
-import { amalgamCompletions } from './impl/amalgam';
 import { bedrockCompletions } from './impl/bedrock';
 import { multiStepCompletions } from './impl/multi-step';
 import { openAICompletions } from './impl/openai';
@@ -27,231 +26,34 @@ export type ToolCompletionService = (
   options: ModelOptions,
 ) => Promise<ToolCall[]>;
 
+export interface ModelOptions {
+  temperature?: number;
+  maxTokens?: number;
+  enabledTools?: Tool<object>[];
+  stopTokens?: string[];
+}
+
+export interface ModelMetadata {
+  /**
+   * The maximum amount of tokens this model supports.
+   * If this is less than engine's maximum allowed tokens, we'll use this.
+   */
+  maxTokens: number;
+
+  /**
+   * Input cost in dollars (or euros) per 1000 tokens.
+   */
+  inputCost: number;
+
+  /**
+   * Output cost per 1000 tokens.
+   */
+  outputCost: number;
+}
+
 const services: Record<string, CompletionService> = {};
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-if (OPENAI_API_KEY) {
-  const apiUrl = 'https://api.openai.com/v1';
-  services['openai:gpt-3.5-turbo'] = openAICompletions(
-    apiUrl,
-    OPENAI_API_KEY,
-    'chat',
-    'gpt-3.5-turbo-1106',
-  );
-  services['openai:gpt-4'] = openAICompletions(
-    apiUrl,
-    OPENAI_API_KEY,
-    'chat',
-    'gpt-4-1106-preview',
-  );
-}
-
-if (process.env.AWS_ACCESS_KEY_ID) {
-  services['bedrock:claude-instant-v1'] = bedrockCompletions(
-    'anthropic.claude-instant-v1',
-    'claude',
-  );
-  services['bedrock:claude-v2'] = bedrockCompletions(
-    'anthropic.claude-v2',
-    'claude',
-  );
-  services['bedrock:cohere-command'] = bedrockCompletions(
-    'cohere.command-text-v14',
-    'cohere',
-  );
-}
-
-// Anyscale Endpoints hosts common "open source" LLMs (cheaper than renting own GPUs)
-const ANYSCALE_API_KEY = process.env.ANYSCALE_API_KEY;
-if (ANYSCALE_API_KEY) {
-  const apiUrl = 'https://api.endpoints.anyscale.com/v1';
-  services['anyscale:llama-2-7b'] = openAICompletions(
-    apiUrl,
-    ANYSCALE_API_KEY,
-    'chat',
-    'meta-llama/Llama-2-7b-chat-hf',
-  );
-  services['anyscale:llama-2-13b'] = openAICompletions(
-    apiUrl,
-    ANYSCALE_API_KEY,
-    'chat',
-    'meta-llama/Llama-2-13b-chat-hf',
-  );
-  services['anyscale:llama-2-70b'] = openAICompletions(
-    apiUrl,
-    ANYSCALE_API_KEY,
-    'chat',
-    'meta-llama/Llama-2-70b-chat-hf',
-  );
-  services['anyscale:codellama-34b'] = openAICompletions(
-    apiUrl,
-    ANYSCALE_API_KEY,
-    'chat',
-    'codellama/CodeLlama-34b-Instruct-hf',
-  );
-  services['anyscale:mistral-7b-v0.1'] = openAICompletions(
-    apiUrl,
-    ANYSCALE_API_KEY,
-    'chat',
-    'mistralai/Mistral-7B-Instruct-v0.1',
-  );
-  services['anyscale:mixtral-8x7'] = openAICompletions(
-    apiUrl,
-    ANYSCALE_API_KEY,
-    'chat',
-    'mistralai/Mixtral-8x7B-Instruct-v0.1',
-  );
-}
-
-// Deepinfra hosts several interesting "open source" LLMs (albeit with somewhat questionable privacy guarantees)
-const DEEPINFRA_API_KEY = process.env.DEEPINFRA_API_KEY;
-if (DEEPINFRA_API_KEY) {
-  const apiUrl = 'https://api.deepinfra.com/v1/openai';
-  services['deepinfra:mistrallite'] = openAICompletions(
-    apiUrl,
-    DEEPINFRA_API_KEY,
-    'chat',
-    'amazon/MistralLite',
-  );
-  services['deepinfra:openchat-3.5'] = openAICompletions(
-    apiUrl,
-    DEEPINFRA_API_KEY,
-    'chat',
-    'openchat/openchat_3.5',
-  );
-  services['deepinfra:mythomax-l2-13b'] = openAICompletions(
-    apiUrl,
-    DEEPINFRA_API_KEY,
-    'chat',
-    'Gryphe/MythoMax-L2-13b',
-  );
-  services['deepinfra:airoboros-70b'] = openAICompletions(
-    apiUrl,
-    DEEPINFRA_API_KEY,
-    'chat',
-    'deepinfra/airoboros-70b',
-  );
-  services['deepinfra:airoboros-l2-70b'] = openAICompletions(
-    apiUrl,
-    DEEPINFRA_API_KEY,
-    'chat',
-    'jondurbin/airoboros-l2-70b-gpt4-1.4.1',
-  );
-  services['deepinfra:lzlv-70b'] = openAICompletions(
-    apiUrl,
-    DEEPINFRA_API_KEY,
-    'chat',
-    'lizpreciatior/lzlv_70b_fp16_hf',
-  );
-}
-
-// Perplexity has several interesting custom models
-const PPLX_API_KEY = process.env.PPLX_API_KEY;
-if (PPLX_API_KEY) {
-  const apiUrl = 'https://api.perplexity.ai';
-  services['perplexity:codellama-34b'] = openAICompletions(
-    apiUrl,
-    PPLX_API_KEY,
-    'chat',
-    'codellama-34b-instruct',
-  );
-  services['perplexity:llama-2-70b'] = openAICompletions(
-    apiUrl,
-    PPLX_API_KEY,
-    'chat',
-    'llama-2-70b-chat',
-  );
-  services['perplexity:mistral-7b'] = openAICompletions(
-    apiUrl,
-    PPLX_API_KEY,
-    'chat',
-    'mistral-7b-instruct',
-  );
-  services['perplexity:pplx-7b'] = openAICompletions(
-    apiUrl,
-    PPLX_API_KEY,
-    'chat',
-    'pplx-7b-chat',
-  );
-  services['perplexity:pplx-70b'] = openAICompletions(
-    apiUrl,
-    PPLX_API_KEY,
-    'chat',
-    'pplx-70b-chat',
-  );
-  services['perplexity:pplx-7b-online'] = openAICompletions(
-    apiUrl,
-    PPLX_API_KEY,
-    'chat',
-    'pplx-7b-online',
-  );
-  services['perplexity:pplx-70b-online'] = openAICompletions(
-    apiUrl,
-    PPLX_API_KEY,
-    'chat',
-    'pplx-70b-online',
-  );
-}
-
-// Together AI hosts a huge amount of open source models with good performance
-const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
-if (TOGETHER_API_KEY) {
-  services['together:mixtral-8x7'] = togetherCompletions(
-    TOGETHER_API_KEY,
-    'mistral',
-    'mistralai/Mistral-7B-Instruct-v0.2',
-  );
-  services['together:mistral-7b'] = togetherCompletions(
-    TOGETHER_API_KEY,
-    'mistral',
-    'mistralai/Mixtral-8x7B-Instruct-v0.1',
-  );
-  services['together:openhermes-2.5-mistral'] = togetherCompletions(
-    TOGETHER_API_KEY,
-    'chatml',
-    'teknium/OpenHermes-2p5-Mistral-7B',
-  );
-  services['together:nexusraven-v2'] = togetherCompletions(
-    TOGETHER_API_KEY,
-    'nexusraven',
-    'Nexusflow/NexusRaven-V2-13B',
-  );
-}
-
-// Mistral API
-const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
-if (MISTRAL_API_KEY) {
-  const apiUrl = 'https://api.mistral.ai/v1/';
-  services['mistral:tiny'] = openAICompletions(
-    apiUrl,
-    MISTRAL_API_KEY,
-    'mistral',
-    'mistral-tiny',
-  );
-  services['mistral:small'] = openAICompletions(
-    apiUrl,
-    MISTRAL_API_KEY,
-    'mistral',
-    'mistral-small',
-  );
-  services['mistral:medium'] = openAICompletions(
-    apiUrl,
-    MISTRAL_API_KEY,
-    'mistral',
-    'mistral-medium',
-  );
-}
-
-// Quick hack to support self-hosted models
-const TABBY_API_ENDPOINT = process.env.TABBY_API_ENDPOINT;
-if (TABBY_API_ENDPOINT) {
-  services['selfhosted:tabby-api'] = openAICompletions(
-    TABBY_API_ENDPOINT,
-    'local',
-    'chatml',
-    process.env.TABBY_API_MODEL ?? '',
-  );
-}
+const tokenCounters: Record<string, TokenCounterService> = {};
+const metadatas: Record<string, ModelMetadata> = {};
 
 export function completionsForModel(model: string): CompletionService {
   const service = services[model];
@@ -296,16 +98,33 @@ export function toolCompletionsForModel(model: string): ToolCompletionService {
   };
 }
 
-export interface ModelOptions {
-  temperature?: number;
-  maxTokens?: number;
-  enabledTools?: Tool<object>[];
-  stopTokens?: string[];
+export function tokenCounterForModel(model: string): TokenCounterService {
+  const counter = tokenCounters[model];
+  if (!counter) {
+    throw new Error(`model ${model} not found`);
+  }
+  return counter;
 }
 
-// TODO figure out to gate these behind service availability
-services['engram:multi-step'] = multiStepCompletions(
-  'together:mistral-7b',
-  'together:mixtral-8x7',
-  'together:mixtral-8x7',
-);
+export function metadataForModel(model: string): ModelMetadata {
+  const meta = metadatas[model];
+  if (!meta) {
+    throw new Error(`model ${model} not found`);
+  }
+  return meta;
+}
+
+export function registerService(
+  id: string,
+  completions: CompletionService,
+  tokenCounter: TokenCounterService,
+  metadata: ModelMetadata,
+) {
+  services[id] = completions;
+  tokenCounters[id] = tokenCounter;
+  metadatas[id] = metadata;
+}
+
+// Load model definitions
+import './impl/models';
+import { TokenCounterService } from './tokenization';

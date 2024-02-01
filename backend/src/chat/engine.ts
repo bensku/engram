@@ -20,6 +20,8 @@ export interface ChatEngine {
   options: EngineOption[];
 }
 
+export const MAX_REPLY_TOKENS = 2000;
+
 const ENGINES: Map<string, ChatEngine> = new Map();
 const ENGINE_LIST: ChatEngine[] = []; // To keep engines in insertion order
 
@@ -49,7 +51,7 @@ export function toModelOptions(
 
   return {
     temperature: TEMPERATURE.getOrThrow(engine, options.options),
-    maxTokens: 2000,
+    maxTokens: MAX_REPLY_TOKENS,
     enabledTools,
   };
 }

@@ -15,8 +15,6 @@ registerEngine(
     choices: [
       { value: 'openai:gpt-4', title: 'GPT-4 (default)' },
       { value: 'mistral:medium', title: 'mistral-medium' },
-      { value: 'deepinfra:mythomax-l2-13b', title: 'MythoMax 13B' },
-      { value: 'deepinfra:lzlv-70b', title: 'LZLV 70B' },
       { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
       { value: 'bedrock:claude-v2', title: 'Claude 2' },
     ],

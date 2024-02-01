@@ -1,4 +1,3 @@
-import { Message } from '../service/message';
 import { ChatEngine } from './engine';
 import { Prompt } from './prompt';
 
@@ -91,6 +90,12 @@ export const MODEL = new OptionType<SelectOption>(
   'select',
   'model',
   'Chat model',
+);
+
+export const MAX_TOKENS = new OptionType<SliderOption>(
+  'slider',
+  'max-tokens',
+  'Max tokens',
 );
 
 export const PROMPT = new OptionType<UnknownOption<Prompt>>(

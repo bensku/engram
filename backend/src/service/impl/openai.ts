@@ -20,7 +20,7 @@ export function openAICompletions(
   if (type == 'chat' || type == 'mistral') {
     return async function* (context, options) {
       const body: paths['/chat/completions']['post']['requestBody']['content']['application/json'] & {
-        safe_mode?: boolean;
+        safe_prompt?: boolean;
       } = {
         stream: true,
         model,
@@ -28,7 +28,7 @@ export function openAICompletions(
         temperature: options.temperature,
         max_tokens: options.maxTokens,
         tools: toolList(options),
-        safe_mode: type == 'mistral' ? false : undefined,
+        safe_prompt: type == 'mistral' ? false : undefined,
       };
       const response = await fetch(`${apiUrl}/chat/completions`, {
         method: 'POST',
