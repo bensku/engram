@@ -10,7 +10,7 @@ if (OPENAI_API_KEY) {
   const apiUrl = 'https://api.openai.com/v1';
   registerService(
     'openai:gpt-3.5-turbo',
-    openAICompletions(apiUrl, OPENAI_API_KEY, 'chat', 'gpt-3.5-turbo-1106'),
+    openAICompletions(apiUrl, OPENAI_API_KEY, 'chat', 'gpt-3.5-turbo-0125'),
     simpleTokenCounter(0.3),
     {
       maxTokens: 16385,
@@ -20,7 +20,7 @@ if (OPENAI_API_KEY) {
   );
   registerService(
     'openai:gpt-4',
-    openAICompletions(apiUrl, OPENAI_API_KEY, 'chat', 'ggpt-4-0125-preview'),
+    openAICompletions(apiUrl, OPENAI_API_KEY, 'chat', 'gpt-4-0125-preview'),
     simpleTokenCounter(0.3),
     {
       maxTokens: 128000,
@@ -125,11 +125,13 @@ if (PPLX_API_KEY) {
 // Together AI has a large variety of open source models with good performance
 const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
 if (TOGETHER_API_KEY) {
+  const apiUrl = 'https://api.together.xyz';
   registerService(
     'together:mixtral-8x7',
-    togetherCompletions(
+    openAICompletions(
+      apiUrl,
       TOGETHER_API_KEY,
-      'mistral',
+      'chat',
       'mistralai/Mixtral-8x7B-Instruct-v0.1',
     ),
     simpleTokenCounter(0.3),
@@ -141,9 +143,10 @@ if (TOGETHER_API_KEY) {
   );
   registerService(
     'together:mistral-7b',
-    togetherCompletions(
+    openAICompletions(
+      apiUrl,
       TOGETHER_API_KEY,
-      'mistral',
+      'chat',
       'mistralai/Mistral-7B-Instruct-v0.2',
     ),
     simpleTokenCounter(0.3),
@@ -153,6 +156,22 @@ if (TOGETHER_API_KEY) {
       outputCost: 0.0002,
     },
   );
+  registerService(
+    'together:mistral-7b-v1',
+    openAICompletions(
+      apiUrl,
+      TOGETHER_API_KEY,
+      'chat',
+      'mistralai/Mistral-7B-Instruct-v0.1',
+    ),
+    simpleTokenCounter(0.3),
+    {
+      maxTokens: 4096,
+      inputCost: 0.0002,
+      outputCost: 0.0002,
+    },
+  );
+  // TODO maybe migrate fully to OpenAI client?
   registerService(
     'together:mixtral-nous-hermes-2-dpo',
     togetherCompletions(

@@ -1,7 +1,7 @@
 import { ModelOptions } from '../service/completion';
-import { TopicOptions } from '../service/topic';
 import { Tool, getTools } from '../tool/core';
 import { EngineOption, TEMPERATURE } from './options';
+import { GenerateCallback, GenerateContext } from './pipeline';
 
 export interface ChatEngine {
   /**
@@ -18,6 +18,11 @@ export interface ChatEngine {
    * All engine options.
    */
   options: EngineOption[];
+
+  /**
+   * Callbacks that are executed before generating reply.
+   */
+  preHandlers: GenerateCallback[];
 }
 
 export const MAX_REPLY_TOKENS = 2000;
@@ -37,20 +42,17 @@ export function listEngines(): ChatEngine[] {
   return ENGINE_LIST;
 }
 
-export function toModelOptions(
-  engine: ChatEngine,
-  options: TopicOptions,
-): ModelOptions {
+export function toModelOptions(ctx: GenerateContext): ModelOptions {
   // Figure out which tools are enabled for the topic
   const enabledTools: Tool<object>[] = [];
   for (const [, tool] of getTools().entries()) {
-    if (tool.enableOption.get(engine, options.options)) {
+    if (tool.enableOption.get(ctx)) {
       enabledTools.push(tool);
     }
   }
 
   return {
-    temperature: TEMPERATURE.getOrThrow(engine, options.options),
+    temperature: TEMPERATURE.getOrThrow(ctx),
     maxTokens: MAX_REPLY_TOKENS,
     enabledTools,
   };
@@ -60,10 +62,11 @@ export function registerEngine(
   id: string,
   name: string,
   ...options: EngineOption[]
-) {
-  const engine = { id, name, options };
+): ChatEngine {
+  const engine = { id, name, options, preHandlers: [] };
   ENGINES.set(id, engine);
   ENGINE_LIST.push(engine);
+  return engine;
 }
 
 // Import engines in order they should be shown in UI

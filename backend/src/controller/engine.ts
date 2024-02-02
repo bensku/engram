@@ -5,7 +5,7 @@ import { ChatEngine, listEngines } from '../chat/engine';
 export class EngineController extends Controller {
   @Security('auth')
   @Get('')
-  engines(): Promise<ChatEngine[]> {
+  engines(): Promise<Omit<ChatEngine, 'preHandlers'>[]> {
     return Promise.resolve(
       listEngines().map((engine) => ({
         id: engine.id,

@@ -1,10 +1,10 @@
 import { PassThrough } from 'stream';
 import { completionsForModel } from '../service/completion';
 import { Message } from '../service/message';
-import { TopicOptions } from '../service/topic';
-import { ChatEngine, toModelOptions } from './engine';
 import { Fragment } from '@bensku/engram-shared/src/types';
 import { MODEL } from './options';
+import { GenerateContext } from './pipeline';
+import { toModelOptions } from './engine';
 
 export class ReplyStream {
   #stream: PassThrough;
@@ -51,19 +51,12 @@ export class ReplyStream {
 
 export async function generateReply(
   out: ReplyStream,
-  context: Message[],
-  engine: ChatEngine,
-  topic: TopicOptions,
+  ctx: GenerateContext,
 ): Promise<Message> {
-  const completions = completionsForModel(
-    MODEL.getOrThrow(engine, topic.options),
-  );
+  const completions = completionsForModel(MODEL.getOrThrow(ctx));
   // Stream (but also collect) the final completion
   let text = '';
-  for await (const part of completions(
-    context,
-    toModelOptions(engine, topic),
-  )) {
+  for await (const part of completions(ctx.context, toModelOptions(ctx))) {
     if (part.type == 'text') {
       text += part.text;
       out.appendToMsg(part.text);
@@ -74,7 +67,7 @@ export async function generateReply(
         id: -1,
         text,
         toolCalls: part.calls,
-        agent: engine.id,
+        agent: ctx.engine.id,
         time: Date.now(),
       };
     } else {
@@ -86,7 +79,7 @@ export async function generateReply(
     type: 'bot',
     id: -1,
     text,
-    agent: engine.id,
+    agent: ctx.engine.id,
     time: Date.now(),
   };
 }

@@ -1,26 +1,38 @@
 import { Message } from '../service/message';
 import { TopicOptions } from '../service/topic';
 import { ChatEngine } from './engine';
-import { MODEL } from './options';
+import { MODEL, OptionType, SelectOption } from './options';
+import { GenerateCallback, GenerateContext } from './pipeline';
 
 export type Prompt = Record<string, PromptOption> & { default: PromptOption };
 type PromptOption =
   | [string, string?]
   | ((engine: ChatEngine, options: TopicOptions) => [string, string?]);
 
+export function replacePlaceholderWithOption(
+  placeholder: string,
+  optionType: OptionType<SelectOption>,
+): GenerateCallback {
+  return (ctx) => {
+    const value = optionType.get(ctx);
+    if (value) {
+      ctx.context[0].text = ctx.context[0].text?.replaceAll(placeholder, value);
+    }
+  };
+}
+
 export function promptMessages(
   prompt: Prompt,
-  engine: ChatEngine,
-  options: TopicOptions,
+  ctx: GenerateContext,
 ): Message[] {
-  let option = prompt[MODEL.getOrThrow(engine, options.options)];
+  let option = prompt[MODEL.getOrThrow(ctx)];
   if (!option) {
     // No model-specific prompt; pick the default one
     option = prompt.default;
   }
   if (!Array.isArray(option)) {
     // If prompt is a function, execute it!
-    option = option(engine, options);
+    option = option(ctx.engine, ctx.topic);
   }
 
   // Convert prompt to messages

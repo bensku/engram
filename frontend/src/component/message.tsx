@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import ReactTextareaAutosize from 'react-textarea-autosize';
 import { responses } from '../types';
 import { formatDate } from '../utils';
-import { ReactMarkdown } from 'react-markdown/lib/react-markdown';
-import rehypeHighlight from 'rehype-highlight/lib';
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
 import { engineMap } from '../state';
 
 export const Message = ({

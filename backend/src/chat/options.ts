@@ -1,4 +1,5 @@
 import { ChatEngine } from './engine';
+import { GenerateContext } from './pipeline';
 import { Prompt } from './prompt';
 
 interface BaseEngineOption<T> {
@@ -9,12 +10,12 @@ interface BaseEngineOption<T> {
   userEditable?: boolean;
 }
 
-interface UnknownOption<T> extends BaseEngineOption<T> {
+export interface UnknownOption<T> extends BaseEngineOption<T> {
   type: 'unknown';
   userEditable?: false;
 }
 
-interface SelectOption extends BaseEngineOption<string> {
+export interface SelectOption extends BaseEngineOption<string> {
   type: 'select';
   choices?: { value: string; title: string }[];
 }
@@ -23,7 +24,7 @@ export interface ToggleOption extends BaseEngineOption<boolean> {
   type: 'toggle';
 }
 
-interface SliderOption extends BaseEngineOption<number> {
+export interface SliderOption extends BaseEngineOption<number> {
   type: 'slider';
   start?: number;
   end?: number;
@@ -51,25 +52,21 @@ export class OptionType<T extends EngineOption> {
     } as T;
   }
 
-  get(
-    engine: ChatEngine,
-    overrides: Record<string, unknown>,
-  ): T['defaultValue'] | undefined {
-    const option = this.findOption(engine.options, this.id);
+  get(ctx: GenerateContext): T['defaultValue'] | undefined {
+    const option = this.findOption(ctx.engine.options, this.id);
     if (!option) {
       return;
     }
     if (option.userEditable) {
-      return (overrides[this.id] as T['defaultValue']) ?? option.defaultValue;
+      return (
+        (ctx.topic.options[this.id] as T['defaultValue']) ?? option.defaultValue
+      );
     }
     return option.defaultValue;
   }
 
-  getOrThrow(
-    engine: ChatEngine,
-    overrides: Record<string, unknown>,
-  ): T['defaultValue'] {
-    const opt = this.get(engine, overrides);
+  getOrThrow(ctx: GenerateContext): T['defaultValue'] {
+    const opt = this.get(ctx);
     if (!opt) {
       throw new Error(`missing mandatory option ${this.id}`);
     }

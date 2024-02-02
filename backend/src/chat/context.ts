@@ -2,9 +2,9 @@ import { metadataForModel, tokenCounterForModel } from '../service/completion';
 import { DbMessageStorage } from '../service/impl/postgres';
 import { Message, MessageStorage } from '../service/message';
 import { TokenCounterService } from '../service/tokenization';
-import { TopicOptions } from '../service/topic';
-import { ChatEngine, MAX_REPLY_TOKENS } from './engine';
+import { MAX_REPLY_TOKENS } from './engine';
 import { MAX_TOKENS, MODEL, PROMPT, SPEECH_MODE } from './options';
+import { GenerateContext } from './pipeline';
 import { promptMessages } from './prompt';
 
 const storage: MessageStorage = new DbMessageStorage();
@@ -13,26 +13,19 @@ export async function fullContext(topicId: number): Promise<Message[]> {
   return (await storage.get(topicId)) ?? [];
 }
 
-export async function topicContext(
-  topicId: number,
-  engine: ChatEngine,
-  options: TopicOptions,
-): Promise<Message[]> {
-  let context = (await storage.get(topicId)) ?? [];
-  context = [
-    ...promptMessages(PROMPT.getOrThrow(engine, {}), engine, options),
-    ...context,
-  ];
+export async function topicContext(ctx: GenerateContext): Promise<Message[]> {
+  let context = (await storage.get(ctx.topic.id)) ?? [];
+  context = [...promptMessages(PROMPT.getOrThrow(ctx), ctx), ...context];
 
   // Context length is smallest of: what model can do and what limit has been set for engine
-  const model = MODEL.getOrThrow(engine, options.options);
+  const model = MODEL.getOrThrow(ctx);
   const maxLen = Math.min(
     metadataForModel(model).maxTokens - MAX_REPLY_TOKENS,
-    MAX_TOKENS.get(engine, options.options) ?? Number.MAX_SAFE_INTEGER,
+    MAX_TOKENS.get(ctx) ?? Number.MAX_SAFE_INTEGER,
   );
   context = truncateContext(tokenCounterForModel(model), context, maxLen);
 
-  if (SPEECH_MODE.get(engine, options.options)) {
+  if (SPEECH_MODE.get(ctx)) {
     context[0] = {
       ...context[0],
       text: `${

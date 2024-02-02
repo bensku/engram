@@ -5,6 +5,7 @@ import { CompletionService, ModelOptions } from '../completion';
 import { Message } from '../message';
 import { TranscriptionService } from '../transcription';
 import { TtsService } from '../tts';
+import { JSONSchemaType } from 'ajv';
 
 export function openAICompletions(
   apiUrl: string,
@@ -19,6 +20,13 @@ export function openAICompletions(
 
   if (type == 'chat' || type == 'mistral') {
     return async function* (context, options) {
+      const responseFormat: paths['/chat/completions']['post']['requestBody']['content']['application/json']['response_format'] & {
+        schema?: JSONSchemaType<object>;
+      } = {
+        type: options.jsonMode ? 'json_object' : 'text',
+        schema:
+          typeof options.jsonMode == 'object' ? options.jsonMode : undefined,
+      };
       const body: paths['/chat/completions']['post']['requestBody']['content']['application/json'] & {
         safe_prompt?: boolean;
       } = {
@@ -29,6 +37,8 @@ export function openAICompletions(
         max_tokens: options.maxTokens,
         tools: toolList(options),
         safe_prompt: type == 'mistral' ? false : undefined,
+        response_format:
+          responseFormat.type != 'text' ? responseFormat : undefined,
       };
       const response = await fetch(`${apiUrl}/chat/completions`, {
         method: 'POST',

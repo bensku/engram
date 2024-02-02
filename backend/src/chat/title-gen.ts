@@ -1,6 +1,7 @@
 import { batchCompletionsForModel } from '../service/completion';
 import { DbTopicStorage } from '../service/impl/postgres';
 import { Message } from '../service/message';
+import { TopicOptions } from '../service/topic';
 
 const TITLE_PROMPT = `Generate a a short (few words) title of the above conversation.
 
@@ -43,9 +44,9 @@ export async function generateTitle(context: Message[]): Promise<string> {
 
 const storage = new DbTopicStorage();
 
-export async function updateTitle(
+export async function updateTopic(
   topicId: number,
-  title: string,
+  details: Partial<TopicOptions>,
 ): Promise<void> {
-  await storage.save({ id: topicId, title });
+  await storage.save({ id: topicId, ...details });
 }

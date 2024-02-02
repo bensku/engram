@@ -1,13 +1,13 @@
 import { openAITranscriptions } from '../service/impl/openai';
 import { Message, PostMessageRequest } from '../service/message';
-import { TopicOptions } from '../service/topic';
+import { Topic, TopicOptions } from '../service/topic';
 import { TranscriptionService } from '../service/transcription';
 import { checkToolUsage, invokeTool } from '../tool/call';
 import { appendContext, topicContext } from './context';
-import { getEngine } from './engine';
+import { ChatEngine, getEngine } from './engine';
 import { MODEL, SPEECH_MODE } from './options';
 import { generateReply, ReplyStream } from './reply';
-import { generateTitle, updateTitle } from './title-gen';
+import { generateTitle, updateTopic } from './title-gen';
 
 const transcribe: TranscriptionService | null = process.env.OPENAI_API_KEY
   ? openAITranscriptions(process.env.OPENAI_API_KEY, 'canary-whisper')
@@ -43,15 +43,29 @@ export async function handleMessage(
   };
   message.id = await appendContext(topicId, message);
 
-  // Send them back to the user, along with other information
-  stream.start(message, MODEL.getOrThrow(engine, options.options), Date.now());
+  const generateCtx: GenerateContext = {
+    topic: { ...options, id: topicId, user: -1 },
+    engine,
+    context: [], // This will be filled below, topicContext() needs GenerateContext
+  };
+  const context = await topicContext(generateCtx);
+  generateCtx.context = context;
 
-  const context = await topicContext(topicId, engine, options);
+  // Before we generate anything, go through pre handlers
+  for (const handler of engine.preHandlers) {
+    const maybePromise = handler(generateCtx);
+    if (typeof maybePromise == 'object') {
+      await maybePromise;
+    } // else: not an async handler
+  }
+
+  // Send user's own message back to them
+  stream.start(message, MODEL.getOrThrow(generateCtx), Date.now());
 
   // Stream reply back to user (and save it once it has been completed)
   for (;;) {
     // Generate reply and stream it back to user if it includes text
-    const reply = await generateReply(stream, context, engine, options);
+    const reply = await generateReply(stream, generateCtx);
     context.push(reply);
     reply.id = await appendContext(topicId, reply);
 
@@ -59,7 +73,7 @@ export async function handleMessage(
     if (reply.type == 'bot' && reply.toolCalls) {
       // End the current reply before sending tool message to user
       // Otherwise, the messages might be in wrong order
-      stream.start(null, MODEL.getOrThrow(engine, options.options), Date.now());
+      stream.start(null, MODEL.getOrThrow(generateCtx), Date.now());
 
       for (const call of reply.toolCalls) {
         // Check LLM-generated arguments
@@ -108,8 +122,28 @@ export async function handleMessage(
   if (!options.title) {
     const title = await generateTitle(context);
     stream.sendFragment({ type: 'title', title });
-    await updateTitle(topicId, title);
+    await updateTopic(topicId, { title });
   }
 
   stream.close(context[context.length - 1].id);
+}
+
+export type GenerateCallback = (ctx: GenerateContext) => Promise<void> | void;
+
+export interface GenerateContext {
+  /**
+   * Topic we're generating for, including overrides for engine options.
+   */
+  readonly topic: Topic;
+
+  /**
+   * Chat engine responsible for this generation.
+   */
+  readonly engine: ChatEngine;
+
+  /**
+   * Context. Can be modified in pre-generation callbacks, but the
+   * modifications won't be stored.
+   */
+  context: Message[];
 }

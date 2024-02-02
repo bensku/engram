@@ -31,6 +31,7 @@ export interface ModelOptions {
   maxTokens?: number;
   enabledTools?: Tool<object>[];
   stopTokens?: string[];
+  jsonMode?: boolean | JSONSchemaType<object>;
 }
 
 export interface ModelMetadata {
@@ -128,3 +129,4 @@ export function registerService(
 // Load model definitions
 import './impl/models';
 import { TokenCounterService } from './tokenization';
+import { JSONSchemaType } from 'ajv';
