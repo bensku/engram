@@ -39,3 +39,8 @@ export const message = pgTable('message', {
 export const messageRelations = relations(message, ({ one }) => ({
   topic: one(topic),
 }));
+
+export const runner = pgTable('runner', {
+  id: text('id').primaryKey(),
+  type: text('type').notNull(),
+});
