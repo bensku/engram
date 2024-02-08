@@ -36,6 +36,7 @@ export async function createPod(
       templateId: "${templateId}"
       volumeInGb: 0
       containerDiskInGb: 10
+      minDownload: 500
     }
   ) {
     id
