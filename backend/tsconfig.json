@@ -13,7 +13,8 @@
         "moduleResolution": "node",
         "baseUrl": "../",
         "resolveJsonModule": true,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "outDir": "dist"
     },
     "include": ["./src", "./drizzle.config.ts"]
 }

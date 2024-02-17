@@ -17,11 +17,11 @@
   },
   "homepage": "https://github.com/bensku/engram#readme",
   "dependencies": {
-    "@bensku/engram-shared": "*",
-    "concurrently": "^7.6.0"
+    "@bensku/engram-shared": "*"
   },
   "devDependencies": {
-    "@bensku/engram-devtools": "*"
+    "@bensku/engram-devtools": "*",
+    "concurrently": "^7.6.0"
   },
   "workspaces": [
     "shared",

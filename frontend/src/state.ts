@@ -1,10 +1,11 @@
 import { signal } from '@preact/signals';
 import { responses } from './types';
 
-export const engines = signal<responses['ChatEngine'][]>([]);
-export const engineMap = signal<Map<string, responses['ChatEngine']>>(
-  new Map(),
-);
+// FIXME make backend export name as ChatEngine, this is not good
+export const engines = signal<responses['Omit_ChatEngine.preHandlers_'][]>([]);
+export const engineMap = signal<
+  Map<string, responses['Omit_ChatEngine.preHandlers_']>
+>(new Map());
 
 export const topics = signal<responses['Topic'][]>([]);
 export const currentTopic = signal<Partial<responses['Topic']>>({});

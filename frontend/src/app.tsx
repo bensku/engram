@@ -27,7 +27,7 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
       const enginesPromise = listEngines({});
       topics.value = (await topicsPromise).data;
       engines.value = (await enginesPromise).data;
-      const map = new Map<string, responses['ChatEngine']>();
+      const map = new Map<string, responses['Omit_ChatEngine.preHandlers_']>();
       for (const engine of engines.value) {
         map.set(engine.id, engine);
       }
