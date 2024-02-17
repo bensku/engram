@@ -6,8 +6,8 @@ dotenv.config({
 import { getExposedPort } from '../runner/runpod';
 import { EmbedCluster, createEmbedder } from '../embed';
 import { RunnerService } from '../runner';
-import { Document, MongoClient } from 'mongodb';
-import { QdrantClient } from '@qdrant/js-client-rest';
+import { wikipediaSource } from '../source/wikipedia';
+import { clearQdrantCollection, qdrantSink } from '../sink/qdrant';
 
 const runpodKey = process.env.RUNPOD_API_KEY;
 const runpodRegistryAuth = process.env.RUNPOD_REGISTRY_AUTH_ID;
@@ -39,8 +39,6 @@ void (async () => {
   if (sourceUrl == 'stop') {
     process.exit(0);
   }
-  const source = new MongoClient(sourceUrl).db(sourceDb).collection('pages');
-  const qdrant = new QdrantClient({ url: targetUrl });
 
   const runners = await runnerSvc.createRunners(3);
 
@@ -52,29 +50,27 @@ void (async () => {
   const embedCluster = new EmbedCluster(
     usableRunners.map((id) => getExposedPort(id, 8000)),
     embeddingsKey,
-    40,
+    50,
   );
 
-  let docs = [];
-  for await (const doc of source.find({})) {
-    docs.push(doc);
+  const source = wikipediaSource(sourceUrl, sourceDb, []);
+  await clearQdrantCollection(targetUrl, targetDb);
+  const sink = qdrantSink(targetUrl, targetDb);
+
+  let chunks = [];
+  for await (const chunk of source) {
+    chunks.push(chunk);
     const start = Date.now();
-    if (docs.length == 200) {
-      const chunks = docs.flatMap(pageToChunks);
+    if (chunks.length == 5000) {
+      // Create embeddings and throw them into sink
       const embeddings = await embedCluster.embed(
         chunks.map((chunk) => chunk.text),
       );
-      await qdrant.upsert(targetDb, {
-        points: chunks.map((chunk, i) => ({
-          id: i, // TODO how to get correct id?
-          vector: embeddings[i],
-        })),
-      });
+      await sink(chunks.map((chunk, i) => ({ chunk, values: embeddings[i] })));
 
-      docs = [];
+      chunks = [];
       console.log(
-        'Processed 1000 pages',
-        'and',
+        'Processed',
         chunks.length,
         'chunks in',
         (Date.now() - start) / 1000,
@@ -122,46 +118,4 @@ async function waitForRunners(ids: string[]) {
   // Return problematic ids
   console.log('Some runners failed to start, ignoring them...');
   return ids.filter((id) => !pass.has(id));
-}
-
-interface Paragraph {
-  sentences: { text: string }[];
-}
-interface Section {
-  title: string;
-  paragraphs: Paragraph[];
-}
-
-const CHUNK_MAX_WORDS = 350;
-
-interface TextChunk {
-  page: string;
-  section: number;
-  text: string;
-}
-
-function sectionToChunks(page: string, sectionIndex: number, section: Section) {
-  const chunks: TextChunk[] = [];
-  let lastWords = Number.MAX_SAFE_INTEGER;
-  for (const paragraph of section.paragraphs ?? []) {
-    const text = paragraph.sentences.map((sentence) => sentence.text).join(' ');
-    const words = text.split(' ').length;
-
-    // Check if the currently processed chunk can have more text added to it
-    if (lastWords + words > CHUNK_MAX_WORDS) {
-      // It can't -> new chunk
-      chunks.push({ page, section: sectionIndex, text: '' });
-      lastWords = 0;
-    }
-    // Append to chunk
-    chunks[chunks.length - 1].text += '\n\n' + text;
-  }
-
-  return chunks;
-}
-
-function pageToChunks(page: Document): TextChunk[] {
-  const pageId = page._id as string;
-  const sections = page.sections as Section[];
-  return sections.flatMap((section, i) => sectionToChunks(pageId, i, section));
 }
