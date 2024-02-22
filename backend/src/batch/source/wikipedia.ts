@@ -1,4 +1,4 @@
-import { Document, MongoClient } from 'mongodb';
+import { Condition, Document, MongoClient, ObjectId } from 'mongodb';
 import { TextChunk } from './api';
 
 /**
@@ -14,20 +14,41 @@ import { TextChunk } from './api';
 export async function* wikipediaSource(
   mongoUrl: string,
   dbName: string,
-  pages?: string[],
+  query?: { pages: string[] } | { categories: string[] },
 ): AsyncGenerator<TextChunk> {
   const source = new MongoClient(mongoUrl).db(dbName).collection('pages');
-  if (pages === undefined) {
+  if (query === undefined) {
     for await (const page of source.find({})) {
       for (const chunk of pageToChunks(page)) {
         yield chunk;
       }
     }
   } else {
-    for (const pageName of pages) {
-      const page = source.findOne({ _id: { equals: pageName } });
-      for (const chunk of pageToChunks(page)) {
-        yield chunk;
+    if ('pages' in query) {
+      for (let i = 0; i < query.pages.length; i++) {
+        const pageName = query.pages[i];
+        const page = await source.findOne({
+          // dumpster-dive does something weird with ids (or maybe Mongo's TS types are just bad?)
+          _id: pageName as unknown as Condition<ObjectId>,
+        });
+        if (!page) {
+          console.warn(
+            'Missing page from dump:',
+            pageName,
+            '(this can happen if page names are from newer dump or live wiki)',
+          );
+          continue;
+        }
+        for (const chunk of pageToChunks(page)) {
+          chunk.docIndex = i;
+          yield chunk;
+        }
+      }
+    } else {
+      for await (const page of source.find({ categories: query.categories })) {
+        for (const chunk of pageToChunks(page)) {
+          yield chunk;
+        }
       }
     }
   }

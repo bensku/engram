@@ -46,7 +46,16 @@ export class EmbedCluster {
           for (;;) {
             const next = positionals.splice(0, this.chunksPerCall);
             if (next.length > 0) {
-              const result = await embedder(...next.map((n) => n.text));
+              let result: number[][];
+              try {
+                result = await embedder(...next.map((n) => n.text));
+              } catch (_e) {
+                // Embedding failed, this processor is probably unhealthy
+                // TODO try again later?
+                console.error('Embedder failed, falling back to others');
+                positionals.push(...next); // Let someone else take it
+                break;
+              }
               for (let i = 0; i < next.length; i++) {
                 vectors[next[i].index] = result[i];
               }

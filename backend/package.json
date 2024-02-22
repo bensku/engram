@@ -24,6 +24,7 @@
     "koa-passport": "^6.0.0",
     "koa-session": "^6.4.0",
     "mongodb": "^6.3.0",
+    "nodemw": "^0.20.0",
     "openid-client": "^5.6.1",
     "postgres": "^3.3.4",
     "tsoa": "^5.1.1"
