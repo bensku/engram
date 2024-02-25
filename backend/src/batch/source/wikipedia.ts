@@ -74,7 +74,7 @@ function sectionToChunks(page: string, sectionIndex: number, section: Section) {
     // Check if the currently processed chunk can have more text added to it
     if (lastWords + words > CHUNK_MAX_WORDS) {
       // It can't -> new chunk
-      chunks.push({ id: `${page}.${sectionIndex}`, text: '' });
+      chunks.push({ id: [page, `${sectionIndex}`], text: '' });
       lastWords = 0;
     }
     // Append to chunk

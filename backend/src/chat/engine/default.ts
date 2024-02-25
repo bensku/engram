@@ -1,8 +1,13 @@
+import { qdrantSearch } from '../../service/impl/qdrant';
 import { getTool } from '../../tool/core';
 import { registerEngine } from '../engine';
+import { applyGrounding } from '../grounding';
 import { MODEL, PROMPT, TEMPERATURE } from '../options';
+import { searchDataSource } from '../search';
+import { wrapVectorSearch } from '../../service/embedding';
+import { openAIEmbeddings } from '../../service/impl/openai';
 
-registerEngine(
+const engine = registerEngine(
   'default',
   'Default',
   MODEL.create({
@@ -42,15 +47,34 @@ registerEngine(
     },
   }),
   getTool('wolfram_alpha').enableOption.create({
-    defaultValue: true,
+    defaultValue: false,
     userEditable: true,
   }),
   getTool('online_search').enableOption.create({
-    defaultValue: true,
+    defaultValue: false,
     userEditable: true,
   }),
   getTool('weather_forecast').enableOption.create({
-    defaultValue: true,
+    defaultValue: false,
     userEditable: true,
   }),
 );
+
+const QDRANT_API_URL = process.env.QDRANT_API_URL;
+const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+
+if (QDRANT_API_URL && TOGETHER_API_KEY) {
+  // TODO don't hardcode for specific model or Together API
+  const wikipedia = wrapVectorSearch(
+    openAIEmbeddings(
+      'https://api.together.xyz/v1',
+      TOGETHER_API_KEY,
+      'WhereIsAI/UAE-Large-V1',
+    ),
+    qdrantSearch(QDRANT_API_URL, 'enwiki'),
+    'Represent this sentence for searching relevant passages:',
+  );
+  engine.preHandlers = [
+    applyGrounding(searchDataSource('enwiki', wikipedia, 0.5, 10)),
+  ];
+}

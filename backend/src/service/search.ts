@@ -1,8 +1,8 @@
 export interface SearchResult {
   /**
-   * Id of the document found.
+   * Id of the document and section found.
    */
-  document: string;
+  id: string[];
 
   /**
    * Score of the search result.
@@ -17,9 +17,9 @@ export interface SearchOptions {
 export type VectorSearchService = (
   query: number[],
   options: SearchOptions,
-) => Promise<SearchResult>;
+) => Promise<SearchResult[]>;
 
 export type SearchService = (
   query: string,
   options: SearchOptions,
-) => Promise<SearchResult>;
+) => Promise<SearchResult[]>;

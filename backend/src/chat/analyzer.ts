@@ -38,7 +38,13 @@ export function newAnalyzer<T extends object>(
       maxTokens: 100,
       jsonMode: replyFormat,
     });
-    const json = JSON.parse(reply) as T;
+    let json: T;
+    try {
+      json = JSON.parse(reply) as T;
+    } catch (e) {
+      console.error('Invalid JSON:', reply);
+      throw e;
+    }
     if (!ajv.validate(replyFormat, json)) {
       console.error(json);
       throw new Error(); // TODO handle this without crashing

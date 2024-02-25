@@ -62,7 +62,7 @@ engine.preHandlers = [
     if (LANGUAGE.getOrThrow(ctx) == 'auto' && msg) {
       // Use another LLM to pick the language
       let language = (await LANGUAGE_CHOOSER(msg)).language;
-      if (language == 'none') {
+      if (language == 'unknown') {
         language = 'typescript'; // Default to TypeScript
       }
       console.log(language);

@@ -1,10 +1,10 @@
-export interface Document {
-  content: string;
+export type DocumentId = string[];
 
-  sourceUrl: string;
-  dataset: string;
+export interface Document {
+  sections: DocumentId;
 }
 
 export interface DocumentStoreService {
-  get(id: string): Document;
+  get(id: string): Promise<Document>;
+  put(id: string, doc: Document): Promise<void>;
 }

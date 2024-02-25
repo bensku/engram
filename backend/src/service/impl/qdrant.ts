@@ -1,36 +1,21 @@
-import { Fetcher } from 'openapi-typescript-fetch';
-import { paths } from '../../../generated/qdrant';
-import { SearchOptions, SearchResult } from '../search';
+import { DocumentId } from '../document';
+import { VectorSearchService } from '../search';
+import { QdrantClient } from '@qdrant/js-client-rest';
 
-export function qdrantSearch(url: string) {
-  const fetcher = Fetcher.for<paths>();
-  fetcher.configure({
-    baseUrl: url,
-  });
-  const search = fetcher
-    .path('/collections/{collection_name}/points/search')
-    .method('post')
-    .create({
-      consistency: true,
-    });
-  return async (
-    query: number[],
-    options: SearchOptions,
-  ): Promise<SearchResult[]> => {
-    const res = await search({
-      collection_name: 'main',
+export function qdrantSearch(
+  url: string,
+  collection: string,
+): VectorSearchService {
+  const qdrant = new QdrantClient({ url });
+
+  return async (query, options) => {
+    const results = await qdrant.search(collection, {
       vector: query,
       limit: options.limit,
     });
-    const results = res.data.result;
-    if (!results) {
-      return []; // We should get HTTP error code on actual error
-    }
-    return results.map((result) => {
-      return {
-        document: result.id.toString(),
-        score: result.score,
-      };
-    });
+    return results.map((result) => ({
+      id: result.payload?.id as DocumentId,
+      score: result.score,
+    }));
   };
 }

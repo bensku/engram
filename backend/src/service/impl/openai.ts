@@ -6,6 +6,7 @@ import { Message } from '../message';
 import { TranscriptionService } from '../transcription';
 import { TtsService } from '../tts';
 import { JSONSchemaType } from 'ajv';
+import { EmbeddingService } from '../embedding';
 
 export function openAICompletions(
   apiUrl: string,
@@ -320,5 +321,31 @@ export function openAITts(apiKey: string, model: string): TtsService {
       }
       yield value;
     }
+  };
+}
+
+export function openAIEmbeddings(
+  apiUrl: string,
+  apiKey: string,
+  model: string,
+): EmbeddingService {
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  };
+  return async (text) => {
+    const body: paths['/embeddings']['post']['requestBody']['content']['application/json'] =
+      {
+        input: text,
+        model,
+      };
+    const response = await fetch(`${apiUrl}/embeddings`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers,
+    });
+    const reply =
+      (await response.json()) as paths['/embeddings']['post']['responses']['200']['content']['application/json'];
+    return reply.data[0].embedding;
   };
 }

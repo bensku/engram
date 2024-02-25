@@ -9,7 +9,7 @@ import {
 import { db } from './db/core';
 import { eq } from 'drizzle-orm';
 import { user } from './db/schema';
-import * as session from 'koa-session';
+import session from 'koa-session';
 
 export class ForbiddenError extends Error {}
 

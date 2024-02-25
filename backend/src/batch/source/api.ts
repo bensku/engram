@@ -1,5 +1,5 @@
 export interface TextChunk {
-  id: string;
+  id: string[];
   text: string;
 
   /**
