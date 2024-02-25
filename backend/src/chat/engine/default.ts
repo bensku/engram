@@ -6,6 +6,8 @@ import { MODEL, PROMPT, TEMPERATURE } from '../options';
 import { searchDataSource } from '../search';
 import { wrapVectorSearch } from '../../service/embedding';
 import { openAIEmbeddings } from '../../service/impl/openai';
+import { WikipediaStore } from '../../service/impl/mongodb';
+import { cohereRerankings } from '../../service/impl/cohere';
 
 const engine = registerEngine(
   'default',
@@ -62,9 +64,11 @@ const engine = registerEngine(
 
 const QDRANT_API_URL = process.env.QDRANT_API_URL;
 const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+const COHERE_API_KEY = process.env.COHERE_API_KEY;
 
-if (QDRANT_API_URL && TOGETHER_API_KEY) {
-  // TODO don't hardcode for specific model or Together API
+if (QDRANT_API_URL && TOGETHER_API_KEY && COHERE_API_KEY) {
+  // TODO don't hardcode for specific model or Together (or Cohere) API
+  const rerankSvc = cohereRerankings(COHERE_API_KEY, 'rerank-english-v2.0');
   const wikipedia = wrapVectorSearch(
     openAIEmbeddings(
       'https://api.together.xyz/v1',
@@ -75,6 +79,12 @@ if (QDRANT_API_URL && TOGETHER_API_KEY) {
     'Represent this sentence for searching relevant passages:',
   );
   engine.preHandlers = [
-    applyGrounding(searchDataSource('enwiki', wikipedia, 0.5, 10)),
+    applyGrounding(
+      [searchDataSource('enwiki', wikipedia, 0.5, 10)],
+      {
+        enwiki: new WikipediaStore('mongodb://echo.benjami.fi', 'enwiki'),
+      },
+      rerankSvc,
+    ),
   ];
 }

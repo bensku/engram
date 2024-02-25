@@ -43,22 +43,31 @@ export class EmbedCluster {
     for (const embedder of this.embedders) {
       processors.push(
         (async () => {
-          for (;;) {
+          nextChunks: for (;;) {
             const next = positionals.splice(0, this.chunksPerCall);
             if (next.length > 0) {
               let result: number[][];
-              try {
-                result = await embedder(...next.map((n) => n.text));
-              } catch (_e) {
-                // Embedding failed, this processor is probably unhealthy
-                // TODO try again later?
-                console.error('Embedder failed, falling back to others');
-                positionals.push(...next); // Let someone else take it
-                break;
+              // Try to embed a few times, there may be network errors thanks to Runpod...
+              for (let fails = 0; fails < 5; fails++) {
+                try {
+                  result = await embedder(...next.map((n) => n.text));
+                } catch (_e) {
+                  console.warn(
+                    'Embedding failure, trying again in 3 seconds...',
+                  );
+                  await new Promise((res) => setTimeout(res, 3000));
+                  continue;
+                }
+                for (let i = 0; i < next.length; i++) {
+                  vectors[next[i].index] = result[i];
+                }
+                continue nextChunks;
               }
-              for (let i = 0; i < next.length; i++) {
-                vectors[next[i].index] = result[i];
-              }
+
+              // Embedding failed too many times, this processor is probably unhealthy
+              console.error('Embedder failed too many times, disabling it!');
+              positionals.push(...next); // Let someone else take it
+              break;
             } else {
               break;
             }

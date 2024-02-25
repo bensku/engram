@@ -11,7 +11,6 @@ import { clearQdrantCollection, qdrantSink } from '../sink/qdrant';
 import Bot from 'nodemw';
 import { promisify } from 'util';
 import { TextChunk } from '../source/api';
-import { EmbedDataSink } from '../sink/api';
 
 const runpodKey = process.env.RUNPOD_API_KEY;
 const runpodRegistryAuth = process.env.RUNPOD_REGISTRY_AUTH_ID;
@@ -49,7 +48,7 @@ void (async () => {
     true,
   );
 
-  const runners = await runnerSvc.createRunners(8);
+  const runners = await runnerSvc.createRunners(12);
 
   const failedRunners = await waitForRunners(runners);
   await runnerSvc.stopRunners(failedRunners);

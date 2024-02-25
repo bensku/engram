@@ -4,7 +4,9 @@ import { newAnalyzer } from './analyzer';
 import { GenerateCallback, GenerateContext } from './pipeline';
 import { batchCompletionsForModel } from '../service/completion';
 import { MODEL } from './options';
-import { DocumentId } from '../service/document';
+import { Document, DocumentId } from '../service/document';
+import { WikipediaStore } from '../service/impl/mongodb';
+import { RerankService } from '../service/rerank';
 
 /**
  * Data source that provides (hopefully) factual information for 'grounding'
@@ -13,7 +15,9 @@ import { DocumentId } from '../service/document';
 export type GroundDataSource = (query: string) => Promise<DocumentId[]>;
 
 export function applyGrounding(
-  ...sources: GroundDataSource[]
+  sources: GroundDataSource[],
+  documentStores: Record<string, WikipediaStore>,
+  rerankSvc: RerankService,
 ): GenerateCallback {
   return async (ctx) => {
     // Generate various kinds of search queries
@@ -30,14 +34,32 @@ export function applyGrounding(
     const queryResults = sources.map((source) => source(query));
 
     // Execute queries in parallel, flatten results to one array and de-duplicate them
-    const allResults = new Set(
+    const documentIds = new Set(
       (await Promise.all([...questionResults, ...queryResults])).flat(),
     );
-    console.log(allResults);
+    console.log(documentIds);
 
     // Fetch results from document stores using dataset ids
-    // We do this here to avoid fetching duplicate results more than once
-    // TODO
+    // We do this here to avoid fetching duplicate results/documents more than once
+    const docIds = new Set([...documentIds].map((id) => id.slice(0, 2)));
+    const documents = await Promise.all(
+      [...docIds].map((id) => documentStores[id[0]].get(id[1])),
+    );
+    const docMap: Record<string, Document> = {};
+    for (const doc of documents) {
+      if (doc) {
+        docMap[doc.id] = doc;
+      }
+    }
+
+    // Get relevant sections from documents
+    const results = [...documentIds].map(
+      (id) => docMap[id[1]].sections[parseInt(id[2])],
+    );
+
+    // Rerank results!
+    const rerankedResults = await rerankSvc(results, query);
+    console.log(rerankedResults);
 
     // Generate an answer
     // TODO how? directly feed to results to context window? extract relevant details using separate pass?

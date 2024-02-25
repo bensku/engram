@@ -1,10 +1,11 @@
 export type DocumentId = string[];
 
 export interface Document {
-  sections: DocumentId;
+  id: string;
+  sections: string[];
 }
 
 export interface DocumentStoreService {
-  get(id: string): Promise<Document>;
+  get(id: string): Promise<Document | null>;
   put(id: string, doc: Document): Promise<void>;
 }
