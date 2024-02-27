@@ -11,7 +11,7 @@ import { cohereRerankings } from '../../service/impl/cohere';
 
 const engine = registerEngine(
   'default',
-  'Default',
+  'Curious',
   MODEL.create({
     defaultValue: 'openai:gpt-3.5-turbo',
     choices: [
@@ -80,7 +80,7 @@ if (QDRANT_API_URL && TOGETHER_API_KEY && COHERE_API_KEY) {
   );
   engine.preHandlers = [
     applyGrounding(
-      [searchDataSource('enwiki', wikipedia, 0.5, 10)],
+      [searchDataSource('enwiki', wikipedia, 0.7, 10)],
       {
         enwiki: new WikipediaStore('mongodb://echo.benjami.fi', 'enwiki'),
       },
