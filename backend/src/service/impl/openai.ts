@@ -2,17 +2,19 @@ import { ReadableStream } from 'stream/web';
 import { readLines } from '@bensku/engram-shared/src/sse';
 import { components, paths } from '../../../generated/openai';
 import { CompletionService, ModelOptions } from '../completion';
-import { Message } from '../message';
+import { Message, MessagePart, extractText } from '../message';
 import { TranscriptionService } from '../transcription';
 import { TtsService } from '../tts';
 import { JSONSchemaType } from 'ajv';
 import { EmbeddingService } from '../embedding';
+import { getAttachmentUrl } from '../../chat/attachment';
 
 export function openAICompletions(
   apiUrl: string,
   apiKey: string,
-  type: 'chat' | 'chatml' | 'mistral',
+  type: 'chat' | 'mistral',
   model: string,
+  imageSupport?: boolean,
 ): CompletionService {
   const headers = {
     Authorization: `Bearer ${apiKey}`,
@@ -33,7 +35,10 @@ export function openAICompletions(
       } = {
         stream: true,
         model,
-        messages: context.map(chatGptMessage),
+        // Convert messages in parallel if there are e.g. image attachments
+        messages: await Promise.all(
+          context.map((msg) => chatGptMessage(msg, !!imageSupport)),
+        ),
         temperature: options.temperature,
         max_tokens: options.maxTokens,
         tools: toolList(options),
@@ -112,46 +117,6 @@ export function openAICompletions(
         }
       }
     };
-  } else if (type == 'chatml') {
-    return async function* (context, options) {
-      const body: paths['/completions']['post']['requestBody']['content']['application/json'] =
-        {
-          stream: true,
-          model,
-          prompt: chatMlPrompt(context),
-          temperature: options.temperature,
-          max_tokens: options.maxTokens,
-          stop: ['user'],
-        };
-      const response = await fetch(`${apiUrl}/completions`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers,
-      });
-      const reader = (
-        response.body as unknown as ReadableStream<Uint8Array>
-      ).getReader();
-
-      for await (const line of readLines(reader)) {
-        if (line.trim() == 'data: [DONE]') {
-          yield { type: 'end' };
-        } else if (line.startsWith('data: ')) {
-          let part: TextCompletionPart;
-          try {
-            part = JSON.parse(
-              line.substring('data: '.length),
-            ) as TextCompletionPart;
-          } catch (e) {
-            console.error(`Invalid JSON response: ${line}`);
-            throw e;
-          }
-          yield { type: 'text', text: part.choices[0].text };
-        } else if (line.length > 0) {
-          // Probably an error, better log it
-          console.error(line);
-        }
-      }
-    };
   } else {
     throw new Error('unknown completions type');
   }
@@ -163,18 +128,19 @@ interface PartialCall {
   partialArgs: string;
 }
 
-function chatGptMessage(
+async function chatGptMessage(
   message: Message,
-): components['schemas']['ChatCompletionRequestMessage'] {
+  imageSupport: boolean,
+): Promise<components['schemas']['ChatCompletionRequestMessage']> {
   if (message.type == 'system') {
     return {
       role: 'system',
-      content: message.text,
+      content: extractText(message),
     };
   } else if (message.type == 'bot') {
     return {
       role: 'assistant',
-      content: message.text ?? null,
+      content: extractText(message),
       tool_calls: message.toolCalls?.map((call) => ({
         id: call.id,
         type: 'function',
@@ -187,16 +153,40 @@ function chatGptMessage(
   } else if (message.type == 'tool') {
     return {
       role: 'tool',
-      content: message.text,
+      content: extractText(message),
       tool_call_id: message.callId,
     };
   } else if (message.type == 'user') {
-    return {
-      role: 'user',
-      content: message.text,
-    };
+    if (imageSupport) {
+      return {
+        role: 'user',
+        content: await Promise.all(message.parts.map(chatGptPart)),
+      };
+    } else {
+      return {
+        role: 'user',
+        content: extractText(message),
+      };
+    }
   } else {
     throw new Error('unknown message type');
+  }
+}
+
+async function chatGptPart(
+  part: MessagePart,
+): Promise<components['schemas']['ChatCompletionRequestMessageContentPart']> {
+  if (part.type == 'text') {
+    return { type: 'text', text: part.text };
+  } else if (part.type == 'image') {
+    return {
+      type: 'image_url',
+      image_url: {
+        url: await getAttachmentUrl(part.objectId),
+      },
+    };
+  } else {
+    throw new Error();
   }
 }
 
@@ -233,26 +223,6 @@ interface ChatCompletionPart {
     index: number;
     finish_reason: string | null;
   }[];
-}
-
-function chatMlPrompt(context: Message[]): string {
-  return (
-    context.map(formatChatMlMessage).join('\n') + '\n<|im_start|>assistant\n'
-  );
-}
-
-function formatChatMlMessage(msg: Message) {
-  let source;
-  if (msg.type == 'bot') {
-    source = 'assistant';
-  } else if (msg.type == 'user') {
-    source = 'user';
-  } else if (msg.type == 'system') {
-    source = 'system';
-  } else {
-    throw new Error('tools are not yet supported for ChatML');
-  }
-  return `<|im_start|>${source}\n${msg.text ?? ''}<|im_end|>`;
 }
 
 interface TextCompletionPart {

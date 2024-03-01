@@ -1,6 +1,11 @@
 import { metadataForModel, tokenCounterForModel } from '../service/completion';
 import { DbMessageStorage } from '../service/impl/postgres';
-import { Message, MessageStorage } from '../service/message';
+import {
+  Message,
+  MessagePart,
+  MessageStorage,
+  appendText,
+} from '../service/message';
 import { TokenCounterService } from '../service/tokenization';
 import { MAX_REPLY_TOKENS } from './engine';
 import { MAX_TOKENS, MODEL, PROMPT, SPEECH_MODE } from './options';
@@ -26,12 +31,10 @@ export async function topicContext(ctx: GenerateContext): Promise<Message[]> {
   context = truncateContext(tokenCounterForModel(model), context, maxLen);
 
   if (SPEECH_MODE.get(ctx)) {
-    context[0] = {
-      ...context[0],
-      text: `${
-        context[0].text ?? ''
-      }\n\nYou are in a voice call with the user. Most of the time, your lines should be a sentence or two, unless the user requests reasoning or long-form outputs. Don't include links in your lines, as they cannot be read out loud.`,
-    };
+    appendText(
+      context[0],
+      `\n\nYou are in a voice call with the user. Most of the time, your lines should be a sentence or two, unless the user requests reasoning or long-form outputs. Don't include links in your lines, as they cannot be read out loud.`,
+    );
   }
 
   return context;
@@ -85,7 +88,10 @@ export async function appendContext(
   return storage.append(topicId, message);
 }
 
-export function updateMessage(id: number, content: string): Promise<void> {
+export function updateMessage(
+  id: number,
+  content: MessagePart[],
+): Promise<void> {
   return storage.update(id, content);
 }
 

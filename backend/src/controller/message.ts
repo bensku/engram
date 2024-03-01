@@ -13,7 +13,7 @@ import {
 import { deleteMessage, fullContext, updateMessage } from '../chat/context';
 import { handleMessage } from '../chat/pipeline';
 import { ReplyStream } from '../chat/reply';
-import { Message, PostMessageRequest } from '../service/message';
+import { Message, PostMessageRequest, extractText } from '../service/message';
 import { RequestBody } from '../types';
 import { DbTopicStorage } from '../service/impl/postgres';
 import { ForbiddenError } from '../auth';
@@ -31,7 +31,7 @@ export class MessageController extends Controller {
   ): Promise<Message[]> {
     // TODO authz, topic owner check
     // Only send messages that have text content to user for now
-    return (await fullContext(topicId)).filter((msg) => msg.text);
+    return (await fullContext(topicId)).filter((msg) => extractText(msg));
   }
 
   @Security('auth')
@@ -63,7 +63,8 @@ export class MessageController extends Controller {
     @Body() message: PostMessageRequest,
   ): Promise<void> {
     // TODO authz
-    await updateMessage(messageId, message.message);
+    // TODO attachment support
+    await updateMessage(messageId, [{ type: 'text', text: message.message }]);
   }
 
   @Security('auth')

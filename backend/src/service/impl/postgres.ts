@@ -1,7 +1,7 @@
 import { db } from '../../db/core';
 import { message, topic } from '../../db/schema';
 import { asc, desc, eq } from 'drizzle-orm';
-import { Message, MessageStorage } from '../message';
+import { Message, MessagePart, MessageStorage } from '../message';
 import { Topic, TopicStorage } from '../topic';
 import { ToolCall } from 'backend/src/tool/call';
 
@@ -62,7 +62,7 @@ export class DbMessageStorage implements MessageStorage {
           type: 'bot',
           id: msg.id,
           time: msg.time,
-          text: msg.text ?? undefined,
+          parts: msg.parts,
           agent: msg.source ?? 'unknown',
           toolCalls: msg.toolData as ToolCall[],
         };
@@ -71,7 +71,7 @@ export class DbMessageStorage implements MessageStorage {
           type: 'tool',
           id: msg.id,
           time: msg.time,
-          text: msg.text as string,
+          parts: msg.parts,
           tool: msg.source ?? 'unknown',
           callId: msg.toolData as string,
         };
@@ -80,7 +80,7 @@ export class DbMessageStorage implements MessageStorage {
           type: 'user',
           id: msg.id,
           time: msg.time,
-          text: msg.text as string,
+          parts: msg.parts,
         };
       } else {
         throw new Error(`unknown message type in database: ${msg.type}`);
@@ -106,17 +106,17 @@ export class DbMessageStorage implements MessageStorage {
         type: msg.type,
         topic: topicId,
         time: msg.time,
-        text: msg.text,
+        parts: msg.parts,
         source,
         toolData,
       })
       .returning({ id: message.id });
     return result[0].id;
   }
-  async update(messageId: number, content: string): Promise<void> {
+  async update(messageId: number, content: MessagePart[]): Promise<void> {
     await db.update(message).set({
       id: messageId,
-      text: content,
+      parts: content,
     });
   }
   async delete(messageId: number): Promise<void> {

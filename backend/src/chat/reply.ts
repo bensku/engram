@@ -65,7 +65,7 @@ export async function generateReply(
       return {
         type: 'bot',
         id: -1,
-        text,
+        parts: [{ type: 'text', text: text }],
         toolCalls: part.calls,
         agent: ctx.engine.id,
         time: Date.now(),
@@ -78,7 +78,7 @@ export async function generateReply(
   return {
     type: 'bot',
     id: -1,
-    text,
+    parts: [{ type: 'text', text: text }],
     agent: ctx.engine.id,
     time: Date.now(),
   };

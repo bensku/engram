@@ -32,7 +32,10 @@ export const Message = ({
           </summary>
           <div>
             <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-              {msg.text ?? ''}
+              {/* TODO image/other attachment support */}
+              {msg?.parts
+                .map((part) => (part.type == 'text' ? part.text : ''))
+                .join('') ?? ''}
             </ReactMarkdown>
           </div>
         </details>
@@ -69,7 +72,10 @@ export const Message = ({
         </button>
       </div>
       <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-        {msg.text ?? ''}
+        {/* TODO image/other attachment support */}
+        {msg?.parts
+          .map((part) => (part.type == 'text' ? part.text : ''))
+          .join('') ?? ''}
       </ReactMarkdown>
     </article>
   );

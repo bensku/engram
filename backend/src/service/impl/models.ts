@@ -3,7 +3,6 @@ import { simpleTokenCounter } from '../tokenization';
 import { bedrockCompletions } from './bedrock';
 import { multiStepCompletions } from './multi-step';
 import { openAICompletions } from './openai';
-import { togetherCompletions } from './together';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 if (OPENAI_API_KEY) {
@@ -174,9 +173,10 @@ if (TOGETHER_API_KEY) {
   // TODO maybe migrate fully to OpenAI client?
   registerService(
     'together:mixtral-nous-hermes-2-dpo',
-    togetherCompletions(
+    openAICompletions(
+      apiUrl,
       TOGETHER_API_KEY,
-      'chatml',
+      'chat',
       'NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO',
     ),
     simpleTokenCounter(0.3),

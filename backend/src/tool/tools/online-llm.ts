@@ -2,6 +2,7 @@ import { batchCompletionsForModel } from '../../service/completion';
 import { OptionType } from '../../chat/options';
 import { registerTool } from '../core';
 import { JSONSchemaType } from 'ajv';
+import { message } from '../../service/message';
 
 const SCHEMA: JSONSchemaType<{ question: string }> = {
   type: 'object',
@@ -42,13 +43,11 @@ const llm = batchCompletionsForModel('perplexity:pplx-7b-online');
 export async function askOnlineLlm(question: string) {
   return await llm(
     [
-      {
-        type: 'system',
-        id: 0,
-        time: Date.now(),
-        text: 'You are an AI assistant with web search. Use it to produce up-to-date and factual answers to any questions the user might ask. If your searches turn up interesting, related, information, include that in your responses! On the other hand, if you cannot find something, DO NOT rely on your own knowledge - just state that you could not find what the user was looking for.',
-      },
-      { type: 'user', id: 1, time: Date.now(), text: question },
+      message(
+        'system',
+        'You are an AI assistant with web search. Use it to produce up-to-date and factual answers to any questions the user might ask. If your searches turn up interesting, related, information, include that in your responses! On the other hand, if you cannot find something, DO NOT rely on your own knowledge - just state that you could not find what the user was looking for.',
+      ),
+      message('user', question),
     ],
     { temperature: 0.3, maxTokens: 1000 },
   );

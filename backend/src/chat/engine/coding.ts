@@ -9,6 +9,7 @@ import {
 import { replacePlaceholderWithOption } from '../prompt';
 import { newAnalyzer } from '../analyzer';
 import { JSONSchemaType } from 'ajv';
+import { extractText } from '../../service/message';
 
 const LANGUAGE = new OptionType<SelectOption>(
   'select',
@@ -58,7 +59,7 @@ const engine = registerEngine(
 
 engine.preHandlers = [
   async (ctx) => {
-    const msg = ctx.context[ctx.context.length - 1].text;
+    const msg = extractText(ctx.context[ctx.context.length - 1]);
     if (LANGUAGE.getOrThrow(ctx) == 'auto' && msg) {
       // Use another LLM to pick the language
       let language = (await LANGUAGE_CHOOSER(msg)).language;

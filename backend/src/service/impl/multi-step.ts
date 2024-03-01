@@ -4,7 +4,7 @@ import {
   batchCompletionsForModel,
   completionsForModel,
 } from '../completion';
-import { Message } from '../message';
+import { Message, extractText } from '../message';
 
 /**
  * A multi-step completion service with planning and tool call support.
@@ -29,7 +29,7 @@ export function multiStepCompletions(
   return async function* (context, options) {
     const chatCtx = context
       .slice(0, context.length - 1)
-      .filter((msg) => msg.type != 'tool' && msg.text);
+      .filter((msg) => msg.type != 'tool' && extractText(msg));
     chatCtx.push(context[context.length - 1]);
 
     const category = (
@@ -146,7 +146,7 @@ function appendLast(context: Message[], text: string) {
   const last = context[context.length - 1];
   return [
     ...context.slice(0, context.length - 1),
-    { ...last, text: `${last.text ?? ''}${text}` },
+    { ...last, text: `${extractText(last)}${text}` },
   ];
 }
 

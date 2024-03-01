@@ -7,6 +7,7 @@ import {
   serial,
   text,
 } from 'drizzle-orm/pg-core';
+import { MessagePart } from '../service/message';
 
 export const user = pgTable('user', {
   id: serial('id').primaryKey(),
@@ -32,7 +33,7 @@ export const message = pgTable('message', {
   topic: integer('topic').notNull(),
   time: bigint('time', { mode: 'number' }).notNull(),
   source: text('source'),
-  text: text('text'),
+  parts: jsonb('content').notNull().$type<MessagePart[]>(),
   toolData: jsonb('toolData'),
 });
 

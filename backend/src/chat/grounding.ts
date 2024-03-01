@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import { Message } from '../service/message';
+import { Message, appendText, extractText } from '../service/message';
 import { newAnalyzer } from './analyzer';
 import { GenerateCallback, GenerateContext } from './pipeline';
 import { batchCompletionsForModel } from '../service/completion';
@@ -58,7 +58,10 @@ export function applyGrounding(
       .map((id) => id.split('|'))
       .map((id) => docMap[id[1]].sections[parseInt(id[2])]);
     if (results.length == 0) {
-      ctx.context[0].text += `\n\nYou do not know anything about "${query}". Let the user know this if they ask about it.`;
+      appendText(
+        ctx.context[0],
+        `\n\nYou do not know anything about "${query}". Let the user know this if they ask about it.`,
+      );
       return;
     }
 
@@ -68,38 +71,14 @@ export function applyGrounding(
     // Inject up to 1000 words of results into system prompt
     const includedResults = rerankedResults.splice(0, 3).join('\n\n');
 
-    ctx.context[0].text += `\n\nYou know the following about the topic "${query}":
+    appendText(
+      ctx.context[0],
+      `\n\nYou know the following about the topic "${query}":
 ${includedResults}
 ---
-Use this and ONLY this to answer the user's question!`;
+Use this and ONLY this to answer the user's question!`,
+    );
   };
-}
-
-const CHECK_SCHEMA: JSONSchemaType<{ message_type: string }> = {
-  type: 'object',
-  properties: {
-    message_type: {
-      type: 'string',
-      description:
-        'Classification of the last message (question, analysis, task, other)',
-      enum: ['question', 'analysis', 'task', 'other'],
-    },
-  },
-  required: ['message_type'],
-};
-
-const CHECK_GENERATOR = newAnalyzer(
-  'together:mixtral-8x7',
-  `Please classify it. Did the user ask a question (or request analysis) that requires a factual answer, provide a specific task (such as writing a poem), or something else?`,
-  CHECK_SCHEMA,
-);
-
-async function checkQuestion(ctx: Message[]) {
-  const text = `Below is an message sent by user to an AI chat bot:
-
-${ctx[ctx.length - 1].text ?? ''}`;
-  const reply = await CHECK_GENERATOR(text);
-  return reply.message_type;
 }
 
 const QUESTION_SCHEMA: JSONSchemaType<{ question: string }> = {
@@ -120,13 +99,16 @@ const QUESTION_GENERATOR = newAnalyzer(
 );
 
 async function generateQuestion(ctx: Message[]) {
+  // TODO implement parts -> text conversion (explain images to models that don't natively understand them)
   const text = `Below is an excerpt from a conversation between a user and a research AI assistant:
 
 ${ctx
   .filter((msg) => msg.type == 'bot' || msg.type == 'user')
-  .filter((msg) => msg.text)
+  .filter((msg) => extractText(msg))
   .map((msg) =>
-    msg.type == 'user' ? `User: ${msg.text}` : `Assistant: ${msg.text ?? ''}`,
+    msg.type == 'user'
+      ? `User: ${extractText(msg)}`
+      : `Assistant: ${extractText(msg) ?? ''}`,
   )
   .join('\n\n')}`;
   const reply = await QUESTION_GENERATOR(text);
@@ -155,9 +137,11 @@ async function generateQuery(ctx: Message[]) {
 
 ${ctx
   .filter((msg) => msg.type == 'bot' || msg.type == 'user')
-  .filter((msg) => msg.text)
+  .filter((msg) => extractText(msg))
   .map((msg) =>
-    msg.type == 'user' ? `User: ${msg.text}` : `Assistant: ${msg.text ?? ''}`,
+    msg.type == 'user'
+      ? `User: ${extractText(msg)}`
+      : `Assistant: ${extractText(msg) ?? ''}`,
   )
   .join('\n\n')}`;
   const reply = await QUERY_GENERATOR(text);
@@ -166,7 +150,10 @@ ${ctx
 
 async function generateHydeAnswer(ctx: GenerateContext) {
   const messages = [...ctx.context];
-  messages[0].text = `You are a precise yet helpful AI assistant. Please be brief in your answers. If you don't know something, feel free to guess!`;
+  appendText(
+    messages[0],
+    `You are a precise yet helpful AI assistant. Please be brief in your answers. If you don't know something, feel free to guess!`,
+  );
   const completions = batchCompletionsForModel(MODEL.getOrThrow(ctx));
   return await completions(ctx.context, {
     maxTokens: 200,

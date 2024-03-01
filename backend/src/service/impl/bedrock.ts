@@ -3,7 +3,7 @@ import {
   InvokeModelWithResponseStreamCommand,
 } from '@aws-sdk/client-bedrock-runtime';
 import { CompletionService } from '../completion';
-import { Message } from '../message';
+import { Message, extractText } from '../message';
 import { Tool } from '../../tool/core';
 import { XmlPromptSource } from '../../tool/prompt/xml';
 
@@ -83,11 +83,11 @@ function formatClaudeMessage(msg: Message): string {
   if (msg.type == 'bot') {
     return msg.toolCalls
       ? `\n\nAssistant: ${TOOL_PROMPTER.toolMessage(msg.toolCalls)}`
-      : `\n\nAssistant:${msg.text ?? ''}`;
+      : `\n\nAssistant:${extractText(msg)}`;
   } else if (msg.type == 'user') {
-    return `\n\nHuman:${msg.text}`;
+    return `\n\nHuman:${extractText(msg)}`;
   } else if (msg.type == 'tool') {
-    return `\n---\n${msg.text}`;
+    return `\n---\n${extractText(msg)}`;
   } else {
     throw new Error();
   }
@@ -102,9 +102,9 @@ ${TOOL_PROMPTER.systemPrompt(tools)}
   }
 
   // Anthropic recommends including important instructions in first user message
-  // TODO evaluate this
+  // TODO this is outdated, Claude 2.1 supports system prompts!
   return (
-    `\n\nHuman: ${context[0].text ?? ''}
+    `\n\nHuman: ${extractText(context[0])}
 ${toolMsg}
 BEGIN DIALOGUE
 
@@ -136,11 +136,11 @@ function formatSimpleMessage(msg: Message): string {
   if (msg.type == 'bot') {
     return msg.toolCalls
       ? `\nAssistant: ${TOOL_PROMPTER.toolMessage(msg.toolCalls)}`
-      : `\nAssistant:${msg.text ?? ''}`;
+      : `\nAssistant:${extractText(msg)}`;
   } else if (msg.type == 'user') {
-    return `\nUser:${msg.text}`;
+    return `\nUser:${extractText(msg)}`;
   } else if (msg.type == 'tool') {
-    return `\n---\n${msg.text}`;
+    return `\n---\n${extractText(msg)}`;
   } else {
     throw new Error();
   }
@@ -154,7 +154,7 @@ ${TOOL_PROMPTER.systemPrompt(tools)}
 `;
   }
   return (
-    `${context[0].text ?? ''}\n\n${toolMsg}\n` +
+    `${extractText(context[0])}\n\n${toolMsg}\n` +
     context
       .slice(1)
       .map((msg) => formatSimpleMessage(msg))

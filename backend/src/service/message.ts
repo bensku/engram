@@ -1,5 +1,29 @@
 import { ToolCall } from '../tool/call';
 
+interface BasePart {
+  type: 'text' | 'image';
+}
+
+interface TextPart extends BasePart {
+  type: 'text';
+
+  /**
+   * The text content.
+   */
+  text: string;
+}
+
+interface ImagePart extends BasePart {
+  type: 'image';
+
+  /**
+   * Reference to the image in engram's storage backend.
+   */
+  objectId: string;
+}
+
+export type MessagePart = TextPart | ImagePart;
+
 interface BaseMessage {
   type: 'user' | 'bot' | 'system' | 'tool';
 
@@ -9,10 +33,9 @@ interface BaseMessage {
   id: number;
 
   /**
-   * Main text content of the message. This is not necessarily sent as-is to
-   * either the user or the LLM.
+   * Message parts.
    */
-  text?: string;
+  parts: MessagePart[];
 
   /**
    * Time as milliseconds since UNIX epoch. Frontend should use local time zone to display this.
@@ -22,7 +45,6 @@ interface BaseMessage {
 
 interface UserMessage extends BaseMessage {
   type: 'user';
-  text: string;
 }
 
 interface BotMessage extends BaseMessage {
@@ -38,12 +60,10 @@ interface BotMessage extends BaseMessage {
 
 interface SystemMessage extends BaseMessage {
   type: 'system';
-  text: string;
 }
 
 interface ToolMessage extends BaseMessage {
   type: 'tool';
-  text: string;
 
   tool: string;
 
@@ -55,14 +75,56 @@ interface ToolMessage extends BaseMessage {
 
 export type Message = UserMessage | BotMessage | SystemMessage | ToolMessage;
 
+export function message(type: 'user', content: string): UserMessage;
+export function message(type: 'bot', content: string): BotMessage;
+export function message(type: 'system', content: string): SystemMessage;
+/**
+ * Creates a simple message with only text content.
+ * @param type Message type. This helper doesn't support tool calls.
+ * @param content Message text content.
+ */
+export function message(
+  type: 'user' | 'bot' | 'system',
+  content: string,
+): Message {
+  const parts: MessagePart[] = [{ type: 'text', text: content }];
+  if (type == 'bot') {
+    return {
+      type,
+      id: -1,
+      agent: 'engram',
+      time: Date.now(),
+      parts,
+    };
+  } else {
+    return {
+      type,
+      id: -1,
+      time: Date.now(),
+      parts,
+    };
+  }
+}
+
+export function appendText(msg: Message, text: string): void {
+  msg.parts.push({ type: 'text', text });
+}
+
+export function extractText(msg: Message): string {
+  return msg.parts
+    .map((part) => (part.type == 'text' ? part.text : ''))
+    .join('');
+}
+
 export interface PostMessageRequest {
   format: string;
   message: string;
+  attachments?: unknown; // TODO
 }
 
 export interface MessageStorage {
   get(topicId: number): Promise<Message[] | null>;
   append(topicId: number, msg: Message): Promise<number>;
-  update(messageId: number, content: string): Promise<void>;
+  update(messageId: number, content: MessagePart[]): Promise<void>;
   delete(messageId: number): Promise<void>;
 }

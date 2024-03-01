@@ -1,4 +1,4 @@
-import { Message } from '../service/message';
+import { Message, message } from '../service/message';
 import { TopicOptions } from '../service/topic';
 import { ChatEngine } from './engine';
 import { MODEL, OptionType, SelectOption } from './options';
@@ -9,6 +9,13 @@ type PromptOption =
   | [string, string?]
   | ((engine: ChatEngine, options: TopicOptions) => [string, string?]);
 
+/**
+ * Creates a generation callback that replaces the given placeholder text with
+ * value of an option.
+ * @param placeholder Placeholder text. This is used as-is for replaceAll().
+ * @param optionType Option type.
+ * @returns Generation callback.
+ */
 export function replacePlaceholderWithOption(
   placeholder: string,
   optionType: OptionType<SelectOption>,
@@ -16,7 +23,11 @@ export function replacePlaceholderWithOption(
   return (ctx) => {
     const value = optionType.get(ctx);
     if (value) {
-      ctx.context[0].text = ctx.context[0].text?.replaceAll(placeholder, value);
+      for (const part of ctx.context[0].parts) {
+        if (part.type == 'text') {
+          part.text = part.text.replace(placeholder, value);
+        }
+      }
     }
   };
 }
@@ -36,11 +47,9 @@ export function promptMessages(
   }
 
   // Convert prompt to messages
-  const msgs: Message[] = [
-    { type: 'system', id: -2, text: option[0], time: Date.now() },
-  ];
+  const msgs: Message[] = [message('system', option[0])];
   if (option[1]) {
-    msgs.push({ type: 'user', id: -1, text: option[1], time: Date.now() });
+    msgs.push(message('user', option[1]));
   }
   return msgs;
 }

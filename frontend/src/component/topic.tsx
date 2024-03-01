@@ -89,14 +89,9 @@ export const Topic = ({
       for await (const part of reply) {
         if (part.type == 'start') {
           if (part.replyTo) {
-            messages.push({
-              type: 'user',
-              id: part.replyTo.id,
-              text: part.replyTo.text,
-              time: part.replyTo.time,
-            });
+            messages.push(part.replyTo as responses['Message']);
           }
-          if (msg && msg.text) {
+          if (msg && msg.parts.length > 0) {
             messages.push(msg);
             setLast(undefined); // Avoid briefly displaying same message twice!
           }
@@ -104,7 +99,7 @@ export const Topic = ({
             type: 'bot',
             id: -1,
             agent: '',
-            text: '',
+            parts: [{ type: 'text', text: '' }],
             time: Date.now(),
           };
           msg.agent = part.agent;
@@ -114,7 +109,7 @@ export const Topic = ({
           if (msg == null) {
             throw new Error('wrong order in reply stream');
           }
-          msg.text += part.data;
+          (msg.parts[0] as responses['TextPart']).text += part.data;
           setLast({ ...msg });
         } else if (part.type == 'fragment') {
           // TODO proper fragment handling
@@ -128,7 +123,7 @@ export const Topic = ({
               id: Date.now(), // Just something that won't have duplicates
               tool: part.data.tool,
               callId: '',
-              text: part.data.text,
+              parts: [{ type: 'text', text: part.data.text }],
               time: Date.now(),
             });
             setMessages([...messages]);
@@ -145,19 +140,24 @@ export const Topic = ({
       }
 
       // After message has been received, read it out loud (if speech mode is enabled)
-      if (speechInputEnabled.value && msg?.text) {
-        new Howl({
-          src: `${BASE_URL}/tts/${encodeURIComponent(msg.text)}`,
-          html5: true,
-          autoplay: true,
-          format: 'opus',
-          onloaderror: (_, error) => {
-            console.error(error);
-          },
-          onplayerror: (_, error) => {
-            console.error(error);
-          },
-        });
+      if (speechInputEnabled.value) {
+        const text = msg?.parts
+          .map((part) => (part.type == 'text' ? part.text : ''))
+          .join('');
+        if (text) {
+          new Howl({
+            src: `${BASE_URL}/tts/${encodeURIComponent(text)}`,
+            html5: true,
+            autoplay: true,
+            format: 'opus',
+            onloaderror: (_, error) => {
+              console.error(error);
+            },
+            onplayerror: (_, error) => {
+              console.error(error);
+            },
+          });
+        }
       }
     })();
   };
@@ -181,7 +181,10 @@ export const Topic = ({
           messages.splice(i, 1, replacement);
           void updateMessage({
             messageId: id,
-            message: replacement.text ?? '',
+            // TODO attachment addition/removal?
+            message: replacement.parts
+              .map((part) => (part.type == 'text' ? part.text : ''))
+              .join(''),
             format: 'text',
           });
         }

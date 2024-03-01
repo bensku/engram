@@ -1,5 +1,5 @@
 import { openAITranscriptions } from '../service/impl/openai';
-import { Message, PostMessageRequest } from '../service/message';
+import { Message, PostMessageRequest, extractText } from '../service/message';
 import { Topic, TopicOptions } from '../service/topic';
 import { TranscriptionService } from '../service/transcription';
 import { checkToolUsage, invokeTool } from '../tool/call';
@@ -19,6 +19,7 @@ export async function handleMessage(
   stream: ReplyStream,
   options: TopicOptions,
 ) {
+  // TODO request needs image input support, but do that refactoring later
   let text = request.message;
   if (request.format == 'speech') {
     if (!transcribe) {
@@ -38,7 +39,7 @@ export async function handleMessage(
   const message: Message = {
     type: 'user',
     id: -1,
-    text,
+    parts: [{ type: 'text', text }],
     time: Date.now(),
   };
   message.id = await appendContext(topicId, message);
@@ -99,7 +100,7 @@ export async function handleMessage(
           const toolMsg: Message = {
             id: -1,
             type: 'tool',
-            text: result.message,
+            parts: [{ type: 'text', text: result.message }],
             tool: call.tool,
             callId: call.id,
             time: Date.now(),
@@ -109,7 +110,7 @@ export async function handleMessage(
           stream.sendFragment({
             type: 'toolCallCompleted',
             tool: call.tool,
-            text: toolMsg.text,
+            text: extractText(toolMsg),
           });
         }
       }

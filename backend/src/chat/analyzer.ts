@@ -1,6 +1,6 @@
 import Ajv, { JSONSchemaType } from 'ajv';
 import { batchCompletionsForModel } from '../service/completion';
-import { Message } from '../service/message';
+import { Message, message } from '../service/message';
 
 type Analyzer<T> = (text: string) => Promise<T>;
 
@@ -20,18 +20,11 @@ export function newAnalyzer<T extends object>(
   const completions = batchCompletionsForModel(model);
   return async (text) => {
     const context: Message[] = [
-      {
-        type: 'system',
-        id: 0,
-        time: Date.now(),
-        text: 'You are a precise assistant that provides responses in JSON.',
-      },
-      {
-        type: 'user',
-        id: 1,
-        time: Date.now(),
-        text: `${text}\n---\n${task}`,
-      },
+      message(
+        'system',
+        'You are a precise assistant that provides responses in JSON.',
+      ),
+      message('user', `${text}\n---\n${task}`),
     ];
     const reply = await completions(context, {
       temperature: 0,

@@ -5,9 +5,9 @@ interface CompletionPartBase {
 interface StartPart extends CompletionPartBase {
   type: 'start';
   /**
-   * Id of the message this reply is for.
+   * The message this reply is for.
    */
-  replyTo?: { id: number; time: number; text: string };
+  replyTo?: unknown;
 
   agent: string;
   time: number;
