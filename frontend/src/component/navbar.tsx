@@ -33,12 +33,11 @@ const UserCard = () => {
   return (
     <article class="row container top-align small-padding">
       <button class="transparent circle extra">
-        <MinidenticonImg username="bensku" lightness={40} saturation={80} />
+        <MinidenticonImg username={user.name} lightness={40} saturation={80} />
         <div class="tooltip bottom">Settings</div>
       </button>
       <div class="small-padding vertical">
         <div class="large-text">{user.name}</div>
-        {/* <div class="secondary-text">Administrator</div> */}
       </div>
       <div class="spacer max" />
       <button

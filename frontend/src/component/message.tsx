@@ -5,7 +5,10 @@ import { responses } from '../types';
 import { formatDate } from '../utils';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
-import { engineMap } from '../state';
+import { engineMap, pendingAttachments } from '../state';
+import { JSXInternal } from 'preact/src/jsx';
+import { components } from 'frontend/generated/engram';
+import { Attachment } from './attachment';
 
 export const Message = ({
   msg,
@@ -119,8 +122,10 @@ export const MessageList = ({
 
 export const MessageForm = ({
   onSubmit,
+  uploadHandler,
 }: {
   onSubmit: (text: string) => void;
+  uploadHandler: (name: string, type: string, data: ArrayBuffer) => void;
 }) => {
   const ref = createRef<HTMLTextAreaElement>();
 
@@ -142,12 +147,37 @@ export const MessageForm = ({
     }
   };
 
+  const processUpload = async (
+    event: JSXInternal.TargetedEvent<HTMLInputElement, Event>,
+  ) => {
+    event.preventDefault();
+    const files = event.currentTarget.files;
+    if (files) {
+      for (const file of files) {
+        uploadHandler(file.name, file.type, await file.arrayBuffer());
+      }
+    }
+  };
+
   return (
     <>
+      <div class="pending-attachments">
+        {pendingAttachments.value.map((attachment) => (
+          <Attachment attachment={attachment} key={attachment.name} />
+        ))}
+      </div>
       <div
         class="message-form front large-padding row background"
         style={`height: ${height}px;`}
       >
+        <button class="min transparent circle">
+          <i>attach_file_add</i>
+          <input
+            type="file"
+            multiple
+            onChange={(event) => void processUpload(event)}
+          />
+        </button>
         <div
           class="field textarea border background"
           style={`height: ${height}px;`}

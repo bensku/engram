@@ -1,8 +1,14 @@
 import { openAITranscriptions } from '../service/impl/openai';
-import { Message, PostMessageRequest, extractText } from '../service/message';
+import {
+  Message,
+  MessagePart,
+  PostMessageRequest,
+  extractText,
+} from '../service/message';
 import { Topic, TopicOptions } from '../service/topic';
 import { TranscriptionService } from '../service/transcription';
 import { checkToolUsage, invokeTool } from '../tool/call';
+import { storeUpload } from './attachment';
 import { appendContext, topicContext } from './context';
 import { ChatEngine, getEngine } from './engine';
 import { MODEL, SPEECH_MODE } from './options';
@@ -19,7 +25,6 @@ export async function handleMessage(
   stream: ReplyStream,
   options: TopicOptions,
 ) {
-  // TODO request needs image input support, but do that refactoring later
   let text = request.message;
   if (request.format == 'speech') {
     if (!transcribe) {
@@ -33,13 +38,22 @@ export async function handleMessage(
     options.options[SPEECH_MODE.id] = true;
   }
 
+  // Store attachments
+  const uploads = request.attachments;
+  const attachmentIds = await Promise.all(uploads.map(storeUpload));
+  // Create message parts for attachments
+  const attachmentParts: MessagePart[] = attachmentIds.map((id) => ({
+    type: 'image', // TODO non-image attachments
+    objectId: id,
+  }));
+
   const engine = getEngine(options.engine);
 
   // Fill in missing details to user message
   const message: Message = {
     type: 'user',
     id: -1,
-    parts: [{ type: 'text', text }],
+    parts: [...attachmentParts, { type: 'text', text }],
     time: Date.now(),
   };
   message.id = await appendContext(topicId, message);

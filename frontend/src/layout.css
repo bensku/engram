@@ -30,6 +30,13 @@ main {
   flex-direction: column;
 }
 
+main > .drop-zone {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow-y: scroll;
+}
+
 .topic-title {
   flex-shrink: 0;
 
@@ -51,8 +58,12 @@ main {
   align-items: end;
 }
 
-.message-form > div {
-  width: 100%;
+.pending-attachments {
+  margin-left: 5em;
+}
+
+.message-form > .field {
+  flex-grow: 1;
 }
 
 .send-message {
@@ -70,4 +81,9 @@ textarea {
 
 ul, ol > li {
   margin-left: 15px;
+}
+
+.attachment {
+  padding-left: 1em;
+  padding-right: 5em;
 }

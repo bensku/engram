@@ -11,12 +11,14 @@ import {
 import { debounce } from '../debounce';
 import {
   currentTopic,
+  pendingAttachments,
   pendingMessage,
   speechInputEnabled,
   speechInputHandler,
 } from '../state';
 import { BASE_URL } from '../service/api';
 import { Howl } from 'howler';
+import { DropZone } from './attachment';
 
 export const EmptyTopic = ({
   updateTopic,
@@ -38,13 +40,18 @@ export const EmptyTopic = ({
 
   return (
     <>
-      <Title
-        placeholder="Start a new topic..."
-        title={currentTopic.value.title ?? ''}
-        setTitle={(title) => void updateTopic({ title: title }, 'never')}
-      />
-      <MessageList messages={[]} replaceMessage={() => null} />
-      <MessageForm onSubmit={(text) => newTopic(text, 'text')} />
+      <DropZone handler={attachmentHandler}>
+        <Title
+          placeholder="Start a new topic..."
+          title={currentTopic.value.title ?? ''}
+          setTitle={(title) => void updateTopic({ title: title }, 'never')}
+        />
+        <MessageList messages={[]} replaceMessage={() => null} />
+        <MessageForm
+          onSubmit={(text) => newTopic(text, 'text')}
+          uploadHandler={attachmentHandler}
+        />
+      </DropZone>
     </>
   );
 };
@@ -80,8 +87,9 @@ export const Topic = ({
       // Post user message to server
       const reply = postMessage({
         topicId: id,
-        message: { message, format },
+        message: { message, format, attachments: pendingAttachments.value },
       });
+      pendingAttachments.value = [];
 
       // Stream reply back from server
       // When server is finished, prepare for user reply
@@ -186,6 +194,7 @@ export const Topic = ({
               .map((part) => (part.type == 'text' ? part.text : ''))
               .join(''),
             format: 'text',
+            attachments: [], // TODO implement; how to get attachments from parts?
           });
         }
         setMessages([...messages]); // Copy list to inform Preact about changes
@@ -202,15 +211,38 @@ export const Topic = ({
         title={currentTopic.value.title ?? ''}
         setTitle={updateTitle}
       />
-      <MessageList
-        messages={messages}
-        last={last}
-        replaceMessage={replaceMessage}
-      />
-      <MessageForm onSubmit={(text) => post(text, 'text')} />
+      <DropZone handler={attachmentHandler}>
+        <MessageList
+          messages={messages}
+          last={last}
+          replaceMessage={replaceMessage}
+        />
+        <MessageForm
+          onSubmit={(text) => post(text, 'text')}
+          uploadHandler={attachmentHandler}
+        />
+      </DropZone>
     </>
   );
 };
+function attachmentHandler(
+  name: string,
+  type: string,
+  data: ArrayBuffer,
+): void {
+  // Create binary string - unfortunately, this is how you do Base64 in browser
+  const array = new Uint8Array(data);
+  let binaryStr = '';
+  for (let i = 0; i < array.byteLength; i++) {
+    binaryStr += String.fromCharCode(array[i]);
+  }
+
+  // Append to pending attachments; trigger re-render of them
+  pendingAttachments.value = [
+    ...pendingAttachments.peek(),
+    { name, type, data: btoa(binaryStr) },
+  ];
+}
 
 const Title = ({
   placeholder,

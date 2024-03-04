@@ -116,10 +116,27 @@ export function extractText(msg: Message): string {
     .join('');
 }
 
+export interface FileUpload {
+  /**
+   * File name of client.
+   */
+  name: string;
+
+  /**
+   * Mime type of the file.
+   */
+  type: string;
+
+  /**
+   * BASE64-encoded file data.
+   */
+  data: string;
+}
+
 export interface PostMessageRequest {
   format: string;
   message: string;
-  attachments?: unknown; // TODO
+  attachments: FileUpload[];
 }
 
 export interface MessageStorage {

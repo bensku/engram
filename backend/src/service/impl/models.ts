@@ -27,6 +27,22 @@ if (OPENAI_API_KEY) {
       outputCost: 0.03,
     },
   );
+  registerService(
+    'openai:gpt-4-vision',
+    openAICompletions(
+      apiUrl,
+      OPENAI_API_KEY,
+      'chat',
+      'gpt-4-vision-preview',
+      true,
+    ),
+    simpleTokenCounter(0.3),
+    {
+      maxTokens: 128000,
+      inputCost: 0.01,
+      outputCost: 0.03,
+    },
+  );
 }
 
 // Amazon Bedrock provides access to various commercial models, like Claude

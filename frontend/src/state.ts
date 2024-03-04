@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals';
 import { responses } from './types';
+import { components } from '../generated/engram';
 
 // FIXME make backend export name as ChatEngine, this is not good
 export const engines = signal<responses['Omit_ChatEngine.preHandlers_'][]>([]);
@@ -17,4 +18,8 @@ export const pendingMessage = signal<{
 export const speechInputEnabled = signal<boolean>(false);
 export const speechInputHandler = signal<((binaryStr: string) => void) | null>(
   null,
+);
+
+export const pendingAttachments = signal<components['schemas']['FileUpload'][]>(
+  [],
 );
