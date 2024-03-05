@@ -95,6 +95,10 @@ export function updateMessage(
   return storage.update(id, content);
 }
 
+export function getOneMessage(id: number): Promise<Message | null> {
+  return storage.getOne(id);
+}
+
 export function deleteMessage(id: number): Promise<void> {
   return storage.delete(id);
 }

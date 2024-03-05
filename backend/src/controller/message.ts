@@ -10,13 +10,19 @@ import {
   Route,
   Security,
 } from 'tsoa';
-import { deleteMessage, fullContext, updateMessage } from '../chat/context';
+import {
+  deleteMessage,
+  fullContext,
+  getOneMessage,
+  updateMessage,
+} from '../chat/context';
 import { handleMessage } from '../chat/pipeline';
 import { ReplyStream } from '../chat/reply';
 import { Message, PostMessageRequest, extractText } from '../service/message';
 import { RequestBody } from '../types';
 import { DbTopicStorage } from '../service/impl/postgres';
 import { ForbiddenError } from '../auth';
+import { deleteMessageAttachments } from '../chat/attachment';
 
 // TODO this really shouldn't be in this file, but oh well
 const storage = new DbTopicStorage();
@@ -74,6 +80,10 @@ export class MessageController extends Controller {
     @Path() messageId: number,
   ): Promise<void> {
     // TODO authz
-    await deleteMessage(messageId);
+    const msg = await getOneMessage(messageId);
+    if (msg) {
+      await deleteMessageAttachments(msg);
+      await deleteMessage(messageId);
+    } // TODO throw Not Found otherwise?
   }
 }

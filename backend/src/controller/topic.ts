@@ -14,6 +14,8 @@ import { ForbiddenError } from '../auth';
 import { DbTopicStorage } from '../service/impl/postgres';
 import { Topic, TopicOptions } from '../service/topic';
 import { RequestBody } from '../types';
+import { deleteMessage, fullContext } from '../chat/context';
+import { deleteMessageAttachments } from '../chat/attachment';
 
 const storage = new DbTopicStorage();
 
@@ -80,6 +82,15 @@ export class TopicController extends Controller {
     if ((await storage.get(id))?.user != req.user.id) {
       throw new ForbiddenError();
     }
+
+    // Go through messages; delete them and their attachments
+    const messages = await fullContext(id);
+    // TODO although going through all messages is needed, they could be deleted in one go
+    await Promise.all(
+      messages.map((msg) =>
+        Promise.all([deleteMessageAttachments(msg), deleteMessage(msg.id)]),
+      ),
+    );
     await storage.delete(id);
   }
 }

@@ -87,6 +87,43 @@ export class DbMessageStorage implements MessageStorage {
       }
     });
   }
+  async getOne(messageId: number): Promise<Message | null> {
+    const msg = await db.query.message.findFirst({
+      where: eq(message.id, messageId),
+    });
+    if (!msg) {
+      return null;
+    }
+    // TODO avoid copy-paste - this is difficult, because it is non-trivial to extract TS types for findFirst/findMany results
+    if (msg.type == 'bot') {
+      return {
+        type: 'bot',
+        id: msg.id,
+        time: msg.time,
+        parts: msg.parts,
+        agent: msg.source ?? 'unknown',
+        toolCalls: msg.toolData as ToolCall[],
+      };
+    } else if (msg.type == 'tool') {
+      return {
+        type: 'tool',
+        id: msg.id,
+        time: msg.time,
+        parts: msg.parts,
+        tool: msg.source ?? 'unknown',
+        callId: msg.toolData as string,
+      };
+    } else if (msg.type == 'user') {
+      return {
+        type: 'user',
+        id: msg.id,
+        time: msg.time,
+        parts: msg.parts,
+      };
+    } else {
+      throw new Error(`unknown message type in database: ${msg.type}`);
+    }
+  }
   async append(topicId: number, msg: Message): Promise<number> {
     let source = null;
     if (msg.type == 'bot') {

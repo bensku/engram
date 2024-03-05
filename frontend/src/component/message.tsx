@@ -1,4 +1,4 @@
-import { createRef } from 'preact';
+import { createRef, render } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import ReactTextareaAutosize from 'react-textarea-autosize';
 import { responses } from '../types';
@@ -74,15 +74,28 @@ export const Message = ({
           <div class="tooltip bottom">Delete</div>
         </button>
       </div>
-      <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-        {/* TODO image/other attachment support */}
-        {msg?.parts
-          .map((part) => (part.type == 'text' ? part.text : ''))
-          .join('') ?? ''}
-      </ReactMarkdown>
+      {msg?.parts.map(renderPart)}
     </article>
   );
 };
+
+function renderPart(part: responses['Message']['parts'][0]) {
+  if (part.type == 'text') {
+    // Markdown text as-is
+    return (
+      <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+        {part.text}
+      </ReactMarkdown>
+    );
+  } else if (part.type == 'image') {
+    return (
+      <img
+        src={`/api/attachment/${part.objectId})`}
+        alt="User-submitted image"
+      />
+    );
+  }
+}
 
 export const MessageList = ({
   messages,

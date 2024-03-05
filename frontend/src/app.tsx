@@ -19,6 +19,7 @@ import { TopicOptions } from './component/topic-options';
 import { listEngines } from './service/engine';
 import { currentTopic, engineMap, engines, topics } from './state';
 import { SpeechInput } from './component/speech';
+import { Snackbar } from './component/alert';
 
 const App = ({ id }: { id?: string } & RoutableProps) => {
   useEffect(() => {
@@ -98,6 +99,7 @@ const App = ({ id }: { id?: string } & RoutableProps) => {
 
   return (
     <>
+      <Snackbar />
       <NavBar deleteTopic={_deleteTopic} />
       <main>
         {id ? (

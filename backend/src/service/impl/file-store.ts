@@ -30,6 +30,10 @@ export class FileObjectStore implements ObjectStore {
   put(objectId: string, data: Uint8Array): Promise<void> {
     return fs.writeFile(`${this.dataDir}/${toFileName(objectId)}`, data);
   }
+
+  delete(objectId: string): Promise<void> {
+    return fs.unlink(`${this.dataDir}/${toFileName(objectId)}`);
+  }
 }
 
 function toFileName(objectId: string) {

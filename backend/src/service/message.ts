@@ -141,6 +141,7 @@ export interface PostMessageRequest {
 
 export interface MessageStorage {
   get(topicId: number): Promise<Message[] | null>;
+  getOne(messageId: number): Promise<Message | null>;
   append(topicId: number, msg: Message): Promise<number>;
   update(messageId: number, content: MessagePart[]): Promise<void>;
   delete(messageId: number): Promise<void>;

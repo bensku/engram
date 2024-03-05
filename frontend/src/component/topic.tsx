@@ -18,7 +18,7 @@ import {
 } from '../state';
 import { BASE_URL } from '../service/api';
 import { Howl } from 'howler';
-import { DropZone } from './attachment';
+import { DropZone, addAttachment } from './attachment';
 
 export const EmptyTopic = ({
   updateTopic,
@@ -40,7 +40,7 @@ export const EmptyTopic = ({
 
   return (
     <>
-      <DropZone handler={attachmentHandler}>
+      <DropZone handler={addAttachment}>
         <Title
           placeholder="Start a new topic..."
           title={currentTopic.value.title ?? ''}
@@ -49,7 +49,7 @@ export const EmptyTopic = ({
         <MessageList messages={[]} replaceMessage={() => null} />
         <MessageForm
           onSubmit={(text) => newTopic(text, 'text')}
-          uploadHandler={attachmentHandler}
+          uploadHandler={addAttachment}
         />
       </DropZone>
     </>
@@ -211,7 +211,7 @@ export const Topic = ({
         title={currentTopic.value.title ?? ''}
         setTitle={updateTitle}
       />
-      <DropZone handler={attachmentHandler}>
+      <DropZone handler={addAttachment}>
         <MessageList
           messages={messages}
           last={last}
@@ -219,30 +219,12 @@ export const Topic = ({
         />
         <MessageForm
           onSubmit={(text) => post(text, 'text')}
-          uploadHandler={attachmentHandler}
+          uploadHandler={addAttachment}
         />
       </DropZone>
     </>
   );
 };
-function attachmentHandler(
-  name: string,
-  type: string,
-  data: ArrayBuffer,
-): void {
-  // Create binary string - unfortunately, this is how you do Base64 in browser
-  const array = new Uint8Array(data);
-  let binaryStr = '';
-  for (let i = 0; i < array.byteLength; i++) {
-    binaryStr += String.fromCharCode(array[i]);
-  }
-
-  // Append to pending attachments; trigger re-render of them
-  pendingAttachments.value = [
-    ...pendingAttachments.peek(),
-    { name, type, data: btoa(binaryStr) },
-  ];
-}
 
 const Title = ({
   placeholder,

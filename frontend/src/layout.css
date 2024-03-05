@@ -3,6 +3,7 @@
   height: 100vh;
 }
 
+
 .navbar {
   max-width: 20em;
   min-width: 20em;
@@ -48,6 +49,13 @@ main > .drop-zone {
   overflow-y: scroll;
   font-size: 1rem;
   line-height: 1.6;
+}
+
+.message-list img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-height: 50vh;
 }
 
 .message-form {
