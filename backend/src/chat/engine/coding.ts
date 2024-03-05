@@ -24,9 +24,12 @@ const engine = registerEngine(
     defaultValue: 'openai:gpt-4',
     choices: [
       { value: 'openai:gpt-4', title: 'GPT-4 (default)' },
-      { value: 'mistral:medium', title: 'mistral-medium' },
-      { value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5' },
-      // TODO add other models
+      { value: 'anthropic:claude-3-opus', title: 'Claude 3 Opus' },
+      {
+        value: 'anthropic:claude-3-sonnet',
+        title: 'Claude 3 Sonnet',
+      },
+      { value: 'mistral:large', title: 'Mistral Large' },
     ],
     userEditable: true,
   }),

@@ -10,6 +10,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.16.1",
     "@aws-sdk/client-bedrock-runtime": "^3.441.0",
     "@googleapis/customsearch": "^1.0.0",
     "@koa/router": "^12.0.0",

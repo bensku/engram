@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { ObjectStore } from '../object-store';
+import { ObjectStore, StoredObject } from '../object-store';
 import * as fs from 'fs/promises';
 
 const ID_REGEX = /[0-9a-zA-Z._]*/;
@@ -7,15 +7,17 @@ const ID_REGEX = /[0-9a-zA-Z._]*/;
 export class FileObjectStore implements ObjectStore {
   constructor(private dataDir: string) {}
 
-  get(objectId: string): Promise<Uint8Array> {
-    return fs.readFile(`${this.dataDir}/${toFileName(objectId)}`);
+  async get(objectId: string): Promise<StoredObject> {
+    return {
+      mimeType: objectId.split('.')[1].replace('_', '/'),
+      data: await fs.readFile(`${this.dataDir}/${toFileName(objectId)}`),
+    };
   }
 
   async getUrl(objectId: string): Promise<string> {
-    const data = await this.get(objectId);
-    const mimeType = objectId.split('.')[1].replace('_', '/');
-    const base64 = Buffer.from(data).toString('base64');
-    return `data:${mimeType};base64,${base64}`;
+    const obj = await this.get(objectId);
+    const base64 = Buffer.from(obj.data).toString('base64');
+    return `data:${obj.mimeType};base64,${base64}`;
   }
 
   async create(data: Uint8Array, mimeType: string): Promise<string> {

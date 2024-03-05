@@ -30,6 +30,8 @@ export interface ModelOptions {
   jsonMode?: boolean | JSONSchemaType<object>;
 }
 
+type ModelFeature = 'image_input' | 'video_input';
+
 export interface ModelMetadata {
   /**
    * The maximum amount of tokens this model supports.
@@ -46,6 +48,11 @@ export interface ModelMetadata {
    * Output cost per 1000 tokens.
    */
   outputCost: number;
+
+  /**
+   * Capabilities, such as image or video input.
+   */
+  capabilities?: ModelFeature[];
 }
 
 const services: Record<string, CompletionService> = {};

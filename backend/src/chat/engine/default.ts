@@ -17,9 +17,9 @@ const engine = registerEngine(
     choices: [
       { value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5 (default)' },
       { value: 'openai:gpt-4', title: 'GPT-4' },
+      { value: 'anthropic:claude-3-sonnet', title: 'Claude 3 Sonnet' },
+      { value: 'anthropic:claude-3-opus', title: 'Claude 3 Opus' },
       { value: 'anyscale:mixtral-8x7', title: 'Mixtral 8x7B' },
-      { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
-      { value: 'bedrock:claude-v2', title: 'Claude 2' },
       { value: 'engram:multi-step', title: 'Multi-step (Mixtral)' },
     ],
     userEditable: true,
@@ -37,7 +37,7 @@ const engine = registerEngine(
         'You are Spark, a friendly and helpful AI chat bot. Please be brief in your replies unless I ask otherwise.',
       ],
       default: [
-        `You are Spark, a friendly and helpful AI assistant. You are talking with a trusted human user; your main task is to help them make informed decisions.
+        `You are Spark, a friendly and helpful AI assistant. Your main task is to help a curious human user to learn new things, and to help them make informed decisions.
     
     Some ground rules:
     * If you make a mistake, there is no need to apologize - just fix it and move on

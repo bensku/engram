@@ -3,20 +3,22 @@ import { MODEL, PROMPT, TEMPERATURE } from '../options';
 
 const SYSTEM = `You are Fable, a creative writing assistant.
 
-You are working in the world of fiction; unless specified otherwise, factual accuracy does not matter. It is much more important for you to be creative!
-
-If you are not sure what the user wants, remember to ask clarifying questions!`;
+You're working in the world of fiction; in general, factual accuracy is not needed. It is much more important to be creative!`;
 
 registerEngine(
   'creative',
   'Creative',
   MODEL.create({
-    defaultValue: 'openai:gpt-4',
+    defaultValue: 'anthropic:claude-3-sonnet',
     choices: [
-      { value: 'openai:gpt-4', title: 'GPT-4 (default)' },
-      { value: 'mistral:medium', title: 'mistral-medium' },
-      { value: 'bedrock:claude-instant-v1', title: 'Claude Instant' },
-      { value: 'bedrock:claude-v2', title: 'Claude 2' },
+      {
+        value: 'anthropic:claude-3-sonnet',
+        title: 'Claude 3 Sonnet (default)',
+      },
+      { value: 'anthropic:claude-3-opus', title: 'Claude 3 Opus' },
+      { value: 'openai:gpt-4', title: 'GPT-4' },
+      { value: 'mistral:large', title: 'Mistral Large' },
+      { value: 'mistral:medium', title: 'Mistral Medium' },
     ],
     userEditable: true,
   }),

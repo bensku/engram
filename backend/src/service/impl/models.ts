@@ -1,5 +1,6 @@
 import { registerService } from '../completion';
 import { simpleTokenCounter } from '../tokenization';
+import { anthropicCompletions } from './anthropic';
 import { bedrockCompletions } from './bedrock';
 import { multiStepCompletions } from './multi-step';
 import { openAICompletions } from './openai';
@@ -41,6 +42,7 @@ if (OPENAI_API_KEY) {
       maxTokens: 128000,
       inputCost: 0.01,
       outputCost: 0.03,
+      capabilities: ['image_input'],
     },
   );
 }
@@ -204,7 +206,7 @@ if (TOGETHER_API_KEY) {
   );
 }
 
-// Official Mistral API; at time of writing, mostly for mistral-medium
+// Official Mistral API; mostly for the proprietary models
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 if (MISTRAL_API_KEY) {
   const apiUrl = 'https://api.mistral.ai/v1/';
@@ -220,7 +222,7 @@ if (MISTRAL_API_KEY) {
   );
   registerService(
     'mistral:small',
-    openAICompletions(apiUrl, MISTRAL_API_KEY, 'mistral', 'mistral-small'),
+    openAICompletions(apiUrl, MISTRAL_API_KEY, 'mistral', 'mistral-small-2402'),
     simpleTokenCounter(0.3),
     {
       maxTokens: 32768,
@@ -230,12 +232,54 @@ if (MISTRAL_API_KEY) {
   );
   registerService(
     'mistral:medium',
-    openAICompletions(apiUrl, MISTRAL_API_KEY, 'mistral', 'mistral-medium'),
+    openAICompletions(
+      apiUrl,
+      MISTRAL_API_KEY,
+      'mistral',
+      'mistral-medium-2312',
+    ),
     simpleTokenCounter(0.3),
     {
       maxTokens: 32768,
       inputCost: 0.0025,
       outputCost: 0.0075,
+    },
+  );
+  registerService(
+    'mistral:large',
+    openAICompletions(apiUrl, MISTRAL_API_KEY, 'mistral', 'mistral-large-2402'),
+    simpleTokenCounter(0.3),
+    {
+      maxTokens: 32768,
+      inputCost: 0.008,
+      outputCost: 0.024,
+    },
+  );
+}
+
+// Anthropic's official API
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+if (ANTHROPIC_API_KEY) {
+  registerService(
+    'anthropic:claude-3-opus',
+    anthropicCompletions(ANTHROPIC_API_KEY, 'claude-3-opus-20240229'),
+    simpleTokenCounter(0.3),
+    {
+      maxTokens: 200_000,
+      inputCost: 0.015,
+      outputCost: 0.075,
+      capabilities: ['image_input'],
+    },
+  );
+  registerService(
+    'anthropic:claude-3-sonnet',
+    anthropicCompletions(ANTHROPIC_API_KEY, 'claude-3-sonnet-20240229'),
+    simpleTokenCounter(0.3),
+    {
+      maxTokens: 200_000,
+      inputCost: 0.003,
+      outputCost: 0.015,
+      capabilities: ['image_input'],
     },
   );
 }

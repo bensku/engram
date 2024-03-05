@@ -1,6 +1,7 @@
 import { FileObjectStore } from '../service/impl/file-store';
 import { FileUpload, Message } from '../service/message';
 import { ALLOWED_ATTACHMENT_TYPES } from '@bensku/engram-shared/src/mime-types';
+import { StoredObject } from '../service/object-store';
 
 const OBJECT_STORE = new FileObjectStore('attachments');
 
@@ -8,7 +9,7 @@ export function getAttachmentUrl(objectId: string): Promise<string> {
   return OBJECT_STORE.getUrl(objectId);
 }
 
-export function getAttachmentData(objectId: string): Promise<Uint8Array> {
+export function getAttachment(objectId: string): Promise<StoredObject> {
   return OBJECT_STORE.get(objectId);
 }
 

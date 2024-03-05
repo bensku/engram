@@ -1,5 +1,5 @@
 import { Controller, Get, Route, Security } from 'tsoa';
-import { getAttachmentData, getAttachmentUrl } from '../chat/attachment';
+import { getAttachment, getAttachmentUrl } from '../chat/attachment';
 
 @Route('attachment')
 export class AttachmentController extends Controller {
@@ -12,8 +12,8 @@ export class AttachmentController extends Controller {
       this.setHeader('Location', url);
       return null;
     } else {
-      const data = await getAttachmentData(objectId);
-      return data;
+      const obj = await getAttachment(objectId);
+      return obj.data;
     }
   }
 }
