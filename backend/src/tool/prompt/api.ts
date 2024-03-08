@@ -1,5 +1,5 @@
 import { ToolCall } from '../call';
-import { Tool, getTool } from '../core';
+import { Tool } from '../core';
 
 export interface ToolPromptSource {
   /**

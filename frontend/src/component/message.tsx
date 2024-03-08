@@ -1,4 +1,4 @@
-import { createRef, render } from 'preact';
+import { createRef } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import ReactTextareaAutosize from 'react-textarea-autosize';
 import { responses } from '../types';
@@ -7,7 +7,6 @@ import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import { engineMap, pendingAttachments } from '../state';
 import { JSXInternal } from 'preact/src/jsx';
-import { components } from 'frontend/generated/engram';
 import { Attachment } from './attachment';
 
 export const Message = ({

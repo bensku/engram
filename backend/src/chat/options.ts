@@ -1,4 +1,3 @@
-import { ChatEngine } from './engine';
 import { GenerateContext } from './pipeline';
 import { Prompt } from './prompt';
 

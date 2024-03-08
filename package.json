@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "all": "concurrently 'npm run dev -w backend' 'npm run dev -w frontend'",
-    "migrations": "npm run migrations -w backend"
+    "migrations": "npm run migrations -w backend",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -20,12 +21,18 @@
     "@bensku/engram-shared": "*"
   },
   "devDependencies": {
-    "@bensku/engram-devtools": "*",
-    "concurrently": "^7.6.0"
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "concurrently": "^8.2.2",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "eslint-plugin-react": "^7.34.0",
+    "openapi-typescript": "^6.7.4",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.2"
   },
   "workspaces": [
     "shared",
-    "shared-devtools",
     "backend",
     "frontend"
   ]

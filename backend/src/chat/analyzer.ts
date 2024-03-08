@@ -29,7 +29,7 @@ export function newAnalyzer<T extends object>(
     const reply = await completions(context, {
       temperature: 0,
       maxTokens: 100,
-      jsonMode: replyFormat,
+      jsonMode: replyFormat as JSONSchemaType<object>, // FIXME should not need cast, tsoa bug?
     });
     let json: T;
     try {

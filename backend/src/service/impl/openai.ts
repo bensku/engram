@@ -225,13 +225,6 @@ interface ChatCompletionPart {
   }[];
 }
 
-interface TextCompletionPart {
-  choices: {
-    text: string;
-    index: 0;
-  }[];
-}
-
 export function openAITranscriptions(
   apiKey: string,
   model: string,

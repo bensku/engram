@@ -22,8 +22,8 @@ export const AUTH_ENABLED =
 
 export function koaAuthentication(
   request: Request,
-  securityName: string,
-  scopes?: string[],
+  _securityName: string,
+  _scopes?: string[],
 ): Promise<UserDetails> {
   if (!AUTH_ENABLED) {
     // Local development mode
@@ -44,7 +44,7 @@ export function koaAuthentication(
 }
 
 const verify: StrategyVerifyCallbackUserInfo<UserDetails> = (
-  tokenSet,
+  _tokenSet,
   userinfo,
   done,
 ) => {

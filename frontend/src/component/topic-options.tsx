@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { debounce } from '../debounce';
 import { currentTopic, engineMap, engines, speechInputEnabled } from '../state';
 import { responses } from '../types';
@@ -179,8 +179,6 @@ const SliderField = ({
 
   useEffect(() => setCurrentValue(value), [value]);
 
-  const fieldRef = useRef<HTMLInputElement>(null);
-
   const updateValue = (value: number) => {
     debounceUpdate(onChange, value);
     setCurrentValue(value);
@@ -208,17 +206,8 @@ const SliderField = ({
             onChange={(event) => updateValue(readValue(event))}
           />
           <span></span>
+          <div class="tooltip"></div>
         </label>
-        <input
-          class="no-padding"
-          style="width: 3em; border-block-end: unset;"
-          type="text"
-          inputmode="number"
-          pattern="[0-9]*"
-          value={`${currentValue}`}
-          onBlur={() => updateValue(parseFloat(fieldRef.current?.value ?? '0'))}
-          ref={fieldRef}
-        />
       </div>
     </div>
   );
