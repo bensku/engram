@@ -28,6 +28,12 @@ interface BaseMessage {
   type: 'user' | 'bot' | 'system' | 'tool';
 
   /**
+   * Id of topic that this message belongs to.
+   * Unset for messages that were not loaded from topic storage.
+   */
+  topicId?: number;
+
+  /**
    * Unique id of the message.
    */
   id: number;

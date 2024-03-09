@@ -20,12 +20,9 @@ import { handleMessage } from '../chat/pipeline';
 import { ReplyStream } from '../chat/reply';
 import { Message, PostMessageRequest, extractText } from '../service/message';
 import { RequestBody } from '../types';
-import { DbTopicStorage } from '../service/impl/postgres';
-import { ForbiddenError } from '../auth';
 import { deleteMessageAttachments } from '../chat/attachment';
-
-// TODO this really shouldn't be in this file, but oh well
-const storage = new DbTopicStorage();
+import { checkTopicAccess } from './topic';
+import { NotFoundError } from '../error';
 
 @Route('message')
 export class MessageController extends Controller {
@@ -35,7 +32,7 @@ export class MessageController extends Controller {
     @Request() req: RequestBody,
     @Path() topicId: number,
   ): Promise<Message[]> {
-    // TODO authz, topic owner check
+    await checkTopicAccess(req, topicId);
     // Only send messages that have text content to user for now
     return (await fullContext(topicId)).filter((msg) => extractText(msg));
   }
@@ -47,17 +44,19 @@ export class MessageController extends Controller {
     @Path() topicId: number,
     @Body() message: PostMessageRequest,
   ): Promise<unknown> {
-    const topic = await storage.get(topicId);
-    if (!topic) {
-      throw new Error(); // TODO not found
-    }
-    if (topic.user !== req.user.id) {
-      throw new ForbiddenError();
-    }
+    const topic = await checkTopicAccess(req, topicId);
 
     // PassThrough is not valid return type; OpenAPI doesn't really handle SSE
     const stream = new ReplyStream();
-    void handleMessage(topicId, message, stream, topic);
+    // Handle errors a bit differently from usual; we have already replied 200 OK to client...
+    void handleMessage(topicId, message, stream, topic).catch((e) => {
+      stream.sendFragment({
+        type: 'userMessage',
+        kind: 'error',
+        msg: 'Internal server error. This is likely a bug in engram.',
+      });
+      console.error(e);
+    });
     return Promise.resolve(stream.nodeStream);
   }
 
@@ -68,8 +67,8 @@ export class MessageController extends Controller {
     @Path() messageId: number,
     @Body() message: PostMessageRequest,
   ): Promise<void> {
-    // TODO authz
-    // TODO attachment support
+    const msg = await getOneMessage(messageId);
+    await checkTopicAccess(req, msg?.topicId);
     await updateMessage(messageId, [{ type: 'text', text: message.message }]);
   }
 
@@ -79,11 +78,13 @@ export class MessageController extends Controller {
     @Request() req: RequestBody,
     @Path() messageId: number,
   ): Promise<void> {
-    // TODO authz
     const msg = await getOneMessage(messageId);
+    await checkTopicAccess(req, msg?.topicId);
     if (msg) {
       await deleteMessageAttachments(msg);
       await deleteMessage(messageId);
-    } // TODO throw Not Found otherwise?
+    } else {
+      throw new NotFoundError();
+    }
   }
 }

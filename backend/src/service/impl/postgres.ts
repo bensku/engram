@@ -65,6 +65,7 @@ export class DbMessageStorage implements MessageStorage {
           parts: msg.parts,
           agent: msg.source ?? 'unknown',
           toolCalls: msg.toolData as ToolCall[],
+          topicId: msg.topic,
         };
       } else if (msg.type == 'tool') {
         return {
@@ -74,6 +75,7 @@ export class DbMessageStorage implements MessageStorage {
           parts: msg.parts,
           tool: msg.source ?? 'unknown',
           callId: msg.toolData as string,
+          topicId: msg.topic,
         };
       } else if (msg.type == 'user') {
         return {
@@ -81,6 +83,7 @@ export class DbMessageStorage implements MessageStorage {
           id: msg.id,
           time: msg.time,
           parts: msg.parts,
+          topicId: msg.topic,
         };
       } else {
         throw new Error(`unknown message type in database: ${msg.type}`);
@@ -103,6 +106,7 @@ export class DbMessageStorage implements MessageStorage {
         parts: msg.parts,
         agent: msg.source ?? 'unknown',
         toolCalls: msg.toolData as ToolCall[],
+        topicId: msg.topic,
       };
     } else if (msg.type == 'tool') {
       return {
@@ -112,6 +116,7 @@ export class DbMessageStorage implements MessageStorage {
         parts: msg.parts,
         tool: msg.source ?? 'unknown',
         callId: msg.toolData as string,
+        topicId: msg.topic,
       };
     } else if (msg.type == 'user') {
       return {
@@ -119,6 +124,7 @@ export class DbMessageStorage implements MessageStorage {
         id: msg.id,
         time: msg.time,
         parts: msg.parts,
+        topicId: msg.topic,
       };
     } else {
       throw new Error(`unknown message type in database: ${msg.type}`);

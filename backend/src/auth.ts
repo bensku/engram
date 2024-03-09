@@ -11,8 +11,6 @@ import { eq } from 'drizzle-orm';
 import { user } from './db/schema';
 import session from 'koa-session';
 
-export class ForbiddenError extends Error {}
-
 export interface UserDetails {
   id: number;
 }

@@ -10,12 +10,12 @@ import {
   Route,
   Security,
 } from 'tsoa';
-import { ForbiddenError } from '../auth';
 import { DbTopicStorage } from '../service/impl/postgres';
 import { Topic, TopicOptions } from '../service/topic';
 import { RequestBody } from '../types';
 import { deleteMessage, fullContext } from '../chat/context';
 import { deleteMessageAttachments } from '../chat/attachment';
+import { NotFoundError } from '../error';
 
 const storage = new DbTopicStorage();
 
@@ -30,14 +30,7 @@ export class TopicController extends Controller {
   @Security('auth')
   @Get('{id}')
   async topic(@Request() req: RequestBody, @Path() id: number): Promise<Topic> {
-    const topic = await storage.get(id);
-    if (!topic) {
-      throw new Error(); // TODO not found
-    }
-    if (topic.user != req.user.id) {
-      throw new ForbiddenError();
-    }
-    return topic;
+    return checkTopicAccess(req, id);
   }
 
   @Security('auth')
@@ -62,9 +55,7 @@ export class TopicController extends Controller {
     @Path() id: number,
     @Body() params: Partial<Omit<Topic, 'id'>>,
   ): Promise<void> {
-    if ((await storage.get(id))?.user != req.user.id) {
-      throw new ForbiddenError();
-    }
+    await checkTopicAccess(req, id);
     await storage.save({
       id,
       title: params.title,
@@ -79,9 +70,7 @@ export class TopicController extends Controller {
     @Request() req: RequestBody,
     @Path() id: number,
   ): Promise<void> {
-    if ((await storage.get(id))?.user != req.user.id) {
-      throw new ForbiddenError();
-    }
+    await checkTopicAccess(req, id);
 
     // Go through messages; delete them and their attachments
     const messages = await fullContext(id);
@@ -93,4 +82,29 @@ export class TopicController extends Controller {
     );
     await storage.delete(id);
   }
+}
+
+export async function checkTopicAccess(
+  req: RequestBody,
+  topicId: number | undefined,
+): Promise<Topic> {
+  if (!topicId) {
+    console.warn('Could not check access, missing topic id');
+    throw new NotFoundError();
+  }
+  const topic = await storage.get(topicId);
+  if (!topic) {
+    throw new NotFoundError();
+  } else if (topic.user != req.user.id) {
+    console.warn(
+      'User',
+      req.user.id,
+      'tried to access topic ',
+      topicId,
+      'of user',
+      topic.user,
+    );
+    throw new NotFoundError(); // Don't reveal existence of topic!
+  }
+  return topic;
 }
