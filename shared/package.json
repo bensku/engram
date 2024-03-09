@@ -1,7 +1,9 @@
 {
   "name": "@bensku/engram-shared",
   "description": "",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "@fortaine/fetch-event-source": "^3.0.6",
     "openapi-typescript-fetch": "^2.0.0"

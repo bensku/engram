@@ -9,10 +9,11 @@
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
-        "module": "ESNext",
+        "module": "CommonJS",
         "moduleResolution": "Node",
         "baseUrl": "../",
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "outDir": "dist"
     },
     "include": ["./src"]
 }

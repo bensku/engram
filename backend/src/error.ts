@@ -12,6 +12,8 @@ export async function responseErrorHandler(ctx: DefaultContext, next: Next) {
       ctx.status = 403;
     } else if (e instanceof NotFoundError) {
       ctx.status = 404;
+    } else {
+      throw e;
     }
   }
 }

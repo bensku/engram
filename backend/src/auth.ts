@@ -1,6 +1,6 @@
 import Router from '@koa/router';
 import Application, { Request } from 'koa';
-import * as passport from 'koa-passport';
+import passport from 'koa-passport';
 import {
   Issuer,
   Strategy,

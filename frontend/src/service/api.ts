@@ -4,7 +4,7 @@ import { Fetcher } from 'openapi-typescript-fetch';
 export type { paths } from '../../generated/engram';
 
 // TODO configurable base URL
-export const BASE_URL = 'http://localhost:3000/api';
+export const BASE_URL = '/api';
 
 export const fetcher = Fetcher.for<paths>();
 fetcher.configure({
