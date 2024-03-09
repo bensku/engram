@@ -7,6 +7,7 @@ import {
 } from '@anthropic-ai/sdk/resources';
 import { Message, MessagePart, extractText } from '../message';
 import { getAttachment } from '../../chat/attachment';
+import sharp from 'sharp';
 
 export function anthropicCompletions(
   apiKey: string,
@@ -60,16 +61,26 @@ async function convertPart(
   } else if (part.type == 'image') {
     // Convert image part to BASE64
     const obj = await getAttachment(part.objectId);
+    // Resize the image if needed
+    const data = await resizeIfNeeded(Buffer.from(obj.data));
+
     // We'll assume that Claude supports all image types that we support
     return {
       type: 'image',
       source: {
         media_type: obj.mimeType as ImageBlockParam.Source['media_type'],
-        data: Buffer.from(obj.data).toString('base64'),
+        data: Buffer.from(data).toString('base64'),
         type: 'base64',
       },
     };
   } else {
     throw new Error('unexpected part.type');
   }
+}
+
+function resizeIfNeeded(data: Buffer): Promise<Buffer> {
+  // See https://docs.anthropic.com/claude/docs/vision for recommended sizes
+  return sharp(data)
+    .resize({ width: 1000, withoutEnlargement: true })
+    .toBuffer();
 }

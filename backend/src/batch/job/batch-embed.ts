@@ -118,7 +118,7 @@ async function waitForRunners(ids: string[]) {
           embeddingsKey ?? '',
         )('this is a test');
         pass.add(id);
-      } catch (e) {
+      } catch (_e) {
         // Do nothing, probably still starting up...
       }
     }

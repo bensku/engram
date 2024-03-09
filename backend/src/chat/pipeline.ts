@@ -11,7 +11,7 @@ import { checkToolUsage, invokeTool } from '../tool/call';
 import { storeUpload } from './attachment';
 import { appendContext, topicContext } from './context';
 import { ChatEngine, getEngine } from './engine';
-import { MODEL, SPEECH_MODE } from './options';
+import { MODEL, OptionType, SPEECH_MODE, ToggleOption } from './options';
 import { generateReply, ReplyStream } from './reply';
 import { generateTitle, updateTopic } from './title-gen';
 
@@ -144,6 +144,24 @@ export async function handleMessage(
 }
 
 export type GenerateCallback = (ctx: GenerateContext) => Promise<void> | void;
+
+/**
+ * Wraps the given callback so that it is only applied when a certain topic
+ * option is set to true.
+ * @param option Topic option type.
+ * @param callback The callback to wrap.
+ * @returns A wrapped generate callback.
+ */
+export function requireOption(
+  option: OptionType<ToggleOption>,
+  callback: GenerateCallback,
+): GenerateCallback {
+  return (ctx) => {
+    if (option.get(ctx)) {
+      return callback(ctx);
+    }
+  };
+}
 
 export interface GenerateContext {
   /**

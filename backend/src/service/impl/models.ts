@@ -98,43 +98,43 @@ const PPLX_API_KEY = process.env.PPLX_API_KEY;
 if (PPLX_API_KEY) {
   const apiUrl = 'https://api.perplexity.ai';
   registerService(
-    'perplexity:pplx-7b',
-    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'pplx-7b-chat'),
+    'perplexity:sonar-small',
+    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'sonar-small-chat'),
     simpleTokenCounter(0.3),
     {
-      maxTokens: 8192,
-      inputCost: 0.00007,
-      outputCost: 0.00028,
+      maxTokens: 16384,
+      inputCost: 0.0002,
+      outputCost: 0.0002,
     },
   );
   registerService(
-    'perplexity:pplx-70b',
-    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'pplx-70b-chat'),
+    'perplexity:sonar-medium',
+    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'sonar-medium-chat'),
     simpleTokenCounter(0.3),
     {
-      maxTokens: 4096,
-      inputCost: 0.0007,
-      outputCost: 0.0028,
+      maxTokens: 16384,
+      inputCost: 0.0006,
+      outputCost: 0.0006,
     },
   );
   registerService(
-    'perplexity:pplx-7b-online',
-    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'pplx-7b-online'),
+    'perplexity:sonar-small-online',
+    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'sonar-small-online'),
     simpleTokenCounter(0.3),
     {
-      maxTokens: 4096,
-      inputCost: 0, // Per-request pricing, not supported yet
-      outputCost: 0.00028,
+      maxTokens: 12000,
+      inputCost: 0.0002,
+      outputCost: 0.0002,
     },
   );
   registerService(
-    'perplexity:pplx-70b-online',
-    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'pplx-70b-online'),
+    'perplexity:sonar-medium-online',
+    openAICompletions(apiUrl, PPLX_API_KEY, 'chat', 'sonar-medium-online'),
     simpleTokenCounter(0.3),
     {
-      maxTokens: 4096,
-      inputCost: 0, // Per-request pricing, not supported yet
-      outputCost: 0.0028,
+      maxTokens: 12000,
+      inputCost: 0.0006,
+      outputCost: 0.0006,
     },
   );
 }

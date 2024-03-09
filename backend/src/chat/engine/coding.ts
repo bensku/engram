@@ -7,9 +7,6 @@ import {
   TEMPERATURE,
 } from '../options';
 import { replacePlaceholderWithOption } from '../prompt';
-import { newAnalyzer } from '../analyzer';
-import { JSONSchemaType } from 'ajv';
-import { extractText } from '../../service/message';
 
 const LANGUAGE = new OptionType<SelectOption>(
   'select',
@@ -42,14 +39,13 @@ const engine = registerEngine(
   PROMPT.create({
     defaultValue: {
       default: [
-        'You are an professional software development assistant. When you write code, use {LANG} unless another language is requested.',
+        'You are an professional software development assistant. When writing code, use {LANG} unless another language was specified.',
       ],
     },
   }),
   LANGUAGE.create({
-    defaultValue: 'auto',
+    defaultValue: 'typescript',
     choices: [
-      { value: 'auto', title: 'Auto-pick (default)' },
       { value: 'typescript', title: 'Typescript' },
       { value: 'python', title: 'Python' },
       { value: 'java', title: 'Java' },
@@ -60,38 +56,4 @@ const engine = registerEngine(
   }),
 );
 
-engine.preHandlers = [
-  async (ctx) => {
-    const msg = extractText(ctx.context[ctx.context.length - 1]);
-    if (LANGUAGE.getOrThrow(ctx) == 'auto' && msg) {
-      // Use another LLM to pick the language
-      let language = (await LANGUAGE_CHOOSER(msg)).language;
-      if (language == 'unknown') {
-        language = 'typescript'; // Default to TypeScript
-      }
-      console.log(language);
-      // Set it in topic; this won't be saved anywhere
-      ctx.topic.options[LANGUAGE.id] = language;
-    }
-  },
-  replacePlaceholderWithOption('{LANG}', LANGUAGE),
-];
-
-const LANGUAGE_SCHEMA: JSONSchemaType<{ language: string }> = {
-  type: 'object',
-  properties: {
-    language: {
-      type: 'string',
-      description:
-        'Programming language name (typescript, python, java, shell or unknown)',
-      enum: ['typescript', 'python', 'java', 'shell', 'unknown'],
-    },
-  },
-  required: ['language'],
-};
-const LANGUAGE_CHOOSER = newAnalyzer(
-  'together:mistral-7b-v1',
-  `What programming language would be most relevant for above message?
-Available options: typescript, python, java, shell, unknown`,
-  LANGUAGE_SCHEMA,
-);
+engine.preHandlers = [replacePlaceholderWithOption('{LANG}', LANGUAGE)];

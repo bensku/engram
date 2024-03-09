@@ -1,13 +1,35 @@
 import { qdrantSearch } from '../../service/impl/qdrant';
-import { getTool } from '../../tool/core';
 import { registerEngine } from '../engine';
-import { applyGrounding } from '../grounding';
-import { MODEL, PROMPT, TEMPERATURE } from '../options';
-import { searchDataSource } from '../search';
+import { applyGrounding } from '../grounding/hook';
+import {
+  MODEL,
+  OptionType,
+  PROMPT,
+  TEMPERATURE,
+  ToggleOption,
+} from '../options';
+import { anotherLlmSource, searchDataSource } from '../grounding/search';
 import { wrapVectorSearch } from '../../service/embedding';
 import { openAIEmbeddings } from '../../service/impl/openai';
 import { WikipediaStore } from '../../service/impl/mongodb';
 import { cohereRerankings } from '../../service/impl/cohere';
+import { wolframAlphaDataSource } from '../grounding/wolfram-alpha';
+
+const GROUND_WIKIPEDIA = new OptionType<ToggleOption>(
+  'toggle',
+  'ground.wikipedia',
+  'Ground: Wikipedia 50k',
+);
+const GROUND_WOLFRAM = new OptionType<ToggleOption>(
+  'toggle',
+  'ground.wolfram',
+  'Ground: Wolfram Alpha',
+);
+const GROUND_PERPLEXITY = new OptionType<ToggleOption>(
+  'toggle',
+  'ground.perplexity',
+  'Ground: Perplexity',
+);
 
 const engine = registerEngine(
   'default',
@@ -48,15 +70,15 @@ const engine = registerEngine(
       ],
     },
   }),
-  getTool('wolfram_alpha').enableOption.create({
-    defaultValue: false,
+  GROUND_WIKIPEDIA.create({
+    defaultValue: true,
     userEditable: true,
   }),
-  getTool('online_search').enableOption.create({
-    defaultValue: false,
+  GROUND_WOLFRAM.create({
+    defaultValue: true,
     userEditable: true,
   }),
-  getTool('weather_forecast').enableOption.create({
+  GROUND_PERPLEXITY.create({
     defaultValue: false,
     userEditable: true,
   }),
@@ -76,11 +98,31 @@ if (QDRANT_API_URL && TOGETHER_API_KEY && COHERE_API_KEY) {
       'WhereIsAI/UAE-Large-V1',
     ),
     qdrantSearch(QDRANT_API_URL, 'enwiki'),
-    'Represent this sentence for searching relevant passages:',
   );
   engine.preHandlers = [
     applyGrounding(
-      [searchDataSource('enwiki', wikipedia, 0.7, 10)],
+      [
+        // Search wikipedia; use retrieval prefix for all non-hyde queries
+        {
+          source: searchDataSource(
+            'enwiki',
+            wikipedia,
+            0.7,
+            10,
+            (query, kind) =>
+              kind != 'hyde_answer'
+                ? `Represent this sentence for searching relevant passages: ${query}`
+                : query,
+          ),
+          enableOption: GROUND_WIKIPEDIA,
+        },
+        // Also send queries to Wolfram Alpha
+        { source: wolframAlphaDataSource(), enableOption: GROUND_WOLFRAM },
+        {
+          source: anotherLlmSource('perplexity:sonar-medium-online'),
+          enableOption: GROUND_PERPLEXITY,
+        },
+      ],
       {
         enwiki: new WikipediaStore('mongodb://echo.benjami.fi', 'enwiki'),
       },

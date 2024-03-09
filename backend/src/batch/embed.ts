@@ -21,6 +21,10 @@ export function createEmbedder(
   };
 }
 
+/**
+ * Embed cluster distributes embed requests to multiple machines.
+ * This can significantly improve throughput on not-so-great GPUs.
+ */
 export class EmbedCluster {
   private embedders: BatchEmbedder[];
 

@@ -1,22 +1,37 @@
 import { JSONSchemaType } from 'ajv';
-import { Message, appendText, extractText } from '../service/message';
-import { newAnalyzer } from './analyzer';
-import { GenerateCallback, GenerateContext } from './pipeline';
-import { batchCompletionsForModel } from '../service/completion';
-import { MODEL } from './options';
-import { Document, DocumentId } from '../service/document';
-import { WikipediaStore } from '../service/impl/mongodb';
-import { RerankService } from '../service/rerank';
+import { Message, appendText, extractText } from '../../service/message';
+import { newAnalyzer } from '../analyzer';
+import { GenerateCallback, GenerateContext } from '../pipeline';
+import { batchCompletionsForModel } from '../../service/completion';
+import { MODEL, OptionType, ToggleOption } from '../options';
+import {
+  Document,
+  DocumentId,
+  DocumentStoreService,
+} from '../../service/document';
+import { RerankService } from '../../service/rerank';
+
+export type QueryType = 'question' | 'keyword_query' | 'hyde_answer';
 
 /**
  * Data source that provides (hopefully) factual information for 'grounding'
  * LLM answers in reality.
  */
-export type GroundDataSource = (query: string) => Promise<DocumentId[]>;
+export type GroundDataSource = (
+  query: string,
+  kind: QueryType,
+) => Promise<HitList>;
+
+export type HitList =
+  | { type: 'idList'; ids: DocumentId[] }
+  | { type: 'chunkList'; chunks: string[] };
 
 export function applyGrounding(
-  sources: GroundDataSource[],
-  documentStores: Record<string, WikipediaStore>,
+  sources: {
+    source: GroundDataSource;
+    enableOption?: OptionType<ToggleOption>;
+  }[],
+  documentStores: Record<string, DocumentStoreService>,
   rerankSvc: RerankService,
 ): GenerateCallback {
   return async (ctx) => {
@@ -27,37 +42,66 @@ export function applyGrounding(
       generateHydeAnswer(ctx),
     ]);
 
-    const questionResults = sources.map((source) => source(question));
-    const queryResults = sources.map((source) => source(query));
-    const hydeResults = sources.map((source) => source(hydeAnswer));
+    // Enable only sources for which the option does not exist or is enabled
+    const enabledSources = sources
+      .filter((src) => !src.enableOption || src.enableOption?.get(ctx))
+      .map((src) => src.source);
 
-    // Execute queries in parallel, flatten results to one array and de-duplicate them
+    const questionResults = enabledSources.map((source) =>
+      source(question, 'question'),
+    );
+    const queryResults = enabledSources.map((source) =>
+      source(query, 'keyword_query'),
+    );
+    const hydeResults = enabledSources.map((source) =>
+      source(hydeAnswer, 'hyde_answer'),
+    );
+
+    // Execute all queries in parallel
+    const hits = (
+      await Promise.all([...questionResults, ...queryResults, ...hydeResults])
+    ).flat();
+
+    // Find ids of all documents; stringify and put them into Set for deduplication
     const documentIds = new Set(
-      (await Promise.all([...questionResults, ...queryResults, ...hydeResults]))
+      hits
+        .map((hit) => (hit.type == 'idList' ? hit.ids : []))
         .flat()
-        .map((id) => id.join('|')), // Join to make this set actually deduplicate
+        // Only consider the document part of id!
+        .map((id) => id.slice(0, 2).join('|')),
     );
 
-    // Fetch results from document stores using dataset ids
-    // We do this here to avoid fetching duplicate results/documents more than once
-    const docIds = new Set(
-      [...documentIds].map((id) => id.split('|')).map((id) => id.slice(0, 2)),
-    );
-    const documents = await Promise.all(
-      [...docIds].map((id) => documentStores[id[0]].get(id[1])),
-    );
-    const docMap: Record<string, Document> = {};
-    for (const doc of documents) {
-      if (doc) {
-        docMap[doc.id] = doc;
-      }
-    }
+    // Get all required documents in parallel (but each only once)
+    const documents = new Map<string, Document>();
+    (
+      await Promise.all(
+        [...documentIds]
+          .map((id) => id.split('|'))
+          .map((id) => documentStores[id[0]].get(id[1])),
+      )
+    )
+      .filter((doc) => !!doc)
+      .forEach((doc) => documents.set(doc!.id, doc!));
 
-    // Get relevant sections from documents
-    const results = [...documentIds]
-      .map((id) => id.split('|'))
-      .map((id) => docMap[id[1]].sections[parseInt(id[2])]);
+    // Combine all results together (in more or less random order)
+    const results = hits
+      .map((hit) => {
+        if (hit.type == 'idList') {
+          return hit.ids.map(
+            (id) =>
+              documents.get(id.slice(0, 2).join('|'))?.sections[
+                parseInt(id[2])
+              ],
+          );
+        } else {
+          return hit.chunks;
+        }
+      })
+      .flat()
+      .filter((res) => !!res) as string[];
+
     if (results.length == 0) {
+      // No results
       appendText(
         ctx.context[0],
         `\n\nYou do not know anything about "${query}". Let the user know this if they ask about it.`,
@@ -68,9 +112,8 @@ export function applyGrounding(
     // Rerank results!
     const rerankedResults = await rerankSvc(results, question);
 
-    // Inject up to 1000 words of results into system prompt
+    // Inject top 3 results into system prompt
     const includedResults = rerankedResults.splice(0, 3).join('\n\n');
-
     appendText(
       ctx.context[0],
       `\n\nYou know the following about the topic "${query}":
@@ -94,7 +137,7 @@ const QUESTION_SCHEMA: JSONSchemaType<{ question: string }> = {
 
 const QUESTION_GENERATOR = newAnalyzer(
   'together:mixtral-8x7',
-  `Please rephrase user's last message as a self-contained question that a librarian or another researcher could answer.`,
+  `Please rephrase user's LAST message as a self-contained question that a librarian or another researcher could answer.`,
   QUESTION_SCHEMA,
 );
 
@@ -127,8 +170,8 @@ const QUERY_SCHEMA: JSONSchemaType<{ query: string }> = {
 };
 
 const QUERY_GENERATOR = newAnalyzer(
-  'together:mistral-7b-v1',
-  `Please write a search query based on user's last message. Write a keyword search query, not full sentences!`,
+  'together:mixtral-8x7',
+  `Please write a search query based on user's LAST message. Write a keyword search query, not full sentences!`,
   QUERY_SCHEMA,
 );
 
