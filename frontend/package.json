@@ -8,10 +8,13 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
+    "react-hotkeys-hook": "^4.5.0"
   },
   "devDependencies": {
+    "@preact/preset-vite": "^2.8.1",
     "@preact/signals": "^1.2.2",
     "@ricky0123/vad-web": "^0.0.16",
+    "@types/howler": "^2.2.11",
     "beercss": "^3.5.1",
     "howler": "^2.2.4",
     "minidenticons": "^4.2.1",
@@ -20,8 +23,6 @@
     "react-markdown": "^9.0.1",
     "react-textarea-autosize": "^8.5.3",
     "rehype-highlight": "^7.0.0",
-    "@preact/preset-vite": "^2.8.1",
-    "@types/howler": "^2.2.11",
     "vite": "^5.1.5",
     "vite-plugin-static-copy": "^1.0.1"
   }

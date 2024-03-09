@@ -1,5 +1,5 @@
 import { registerEngine } from '../engine';
-import { MODEL, PROMPT, TEMPERATURE } from '../options';
+import { MAX_TOKENS, MODEL, PROMPT, TEMPERATURE } from '../options';
 
 const SYSTEM = `You are Fable, a creative writing assistant.
 
@@ -30,5 +30,8 @@ registerEngine(
   }),
   PROMPT.create({
     defaultValue: { default: [SYSTEM] },
+  }),
+  MAX_TOKENS.create({
+    defaultValue: 50_000,
   }),
 );

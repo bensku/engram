@@ -4,6 +4,7 @@ import { currentTopic, topics } from '../state';
 import { MinidenticonImg } from './icon';
 import { useEffect, useState } from 'preact/hooks';
 import { getUserDetails } from '../service/user';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 export const NavBar = ({
   deleteTopic,
@@ -56,6 +57,9 @@ const NewTopicButton = () => {
     // Topic is actually created when first message is sent!
     route('/');
   };
+  useHotkeys('ctrl+alt', newTopic, {
+    enableOnFormTags: true,
+  });
 
   return (
     <button

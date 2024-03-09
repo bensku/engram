@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { debounce } from '../debounce';
 import { currentTopic, engineMap, engines, speechInputEnabled } from '../state';
 import { responses } from '../types';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 export const TopicOptions = ({
   updateTopic,
@@ -64,6 +65,13 @@ const EngineSelection = ({
   value: string;
   onChange: (newValue: string) => void;
 }) => {
+  // Use ctrl+1-X hotkeys for changing engine
+  options.forEach((opt, i) =>
+    useHotkeys(`ctrl+${i + 1}`, () => onChange(opt.id), {
+      enableOnFormTags: true,
+    }),
+  );
+
   return (
     <div class="grid no-space">
       {options.map((opt) => (

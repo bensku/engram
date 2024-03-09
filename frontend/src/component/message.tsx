@@ -8,6 +8,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { engineMap, pendingAttachments } from '../state';
 import { JSXInternal } from 'preact/src/jsx';
 import { Attachment } from './attachment';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 export const Message = ({
   msg,
@@ -156,6 +157,14 @@ export const MessageForm = ({
       submit();
     }
   };
+
+  // Autofocus when entering the topic
+  useEffect(() => ref.current?.focus(), []);
+
+  // Hotkey for focusing on text
+  useHotkeys('ctrl+space', () => {
+    ref.current?.focus();
+  });
 
   const processUpload = async (
     event: JSXInternal.TargetedEvent<HTMLInputElement, Event>,

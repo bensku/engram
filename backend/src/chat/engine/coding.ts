@@ -1,5 +1,6 @@
 import { registerEngine } from '../engine';
 import {
+  MAX_TOKENS,
   MODEL,
   OptionType,
   PROMPT,
@@ -53,6 +54,9 @@ const engine = registerEngine(
       { value: 'javascript', title: 'Javascript' },
     ],
     userEditable: true,
+  }),
+  MAX_TOKENS.create({
+    defaultValue: 32_000,
   }),
 );
 

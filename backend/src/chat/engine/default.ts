@@ -2,6 +2,7 @@ import { qdrantSearch } from '../../service/impl/qdrant';
 import { registerEngine } from '../engine';
 import { applyGrounding } from '../grounding/hook';
 import {
+  MAX_TOKENS,
   MODEL,
   OptionType,
   PROMPT,
@@ -64,6 +65,9 @@ const engine = registerEngine(
     The user may consult you about VERY IMPORTANT matters. Do your best job!`,
       ],
     },
+  }),
+  MAX_TOKENS.create({
+    defaultValue: 16_000,
   }),
   GROUND_WIKIPEDIA.create({
     defaultValue: true,
