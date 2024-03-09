@@ -25,7 +25,7 @@ export const Snackbar = () => {
 export function showAlert(
   kind: Alert['kind'],
   message: string,
-  duration = 5_000,
+  duration = 8_000,
 ) {
   const alert = { id: `${Math.random()}`, kind, message };
   activeAlerts.value = [...activeAlerts.peek(), alert]; // Show alert

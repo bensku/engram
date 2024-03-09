@@ -19,6 +19,7 @@ import {
 import { BASE_URL } from '../service/api';
 import { Howl } from 'howler';
 import { DropZone, addAttachment } from './attachment';
+import { showAlert } from './alert';
 
 export const EmptyTopic = ({
   updateTopic,
@@ -106,12 +107,10 @@ export const Topic = ({
           msg = {
             type: 'bot',
             id: -1,
-            agent: '',
+            agent: part.agent,
             parts: [{ type: 'text', text: '' }],
-            time: Date.now(),
+            time: part.time,
           };
-          msg.agent = part.agent;
-          msg.time = part.time;
           setMessages([...messages]);
         } else if (part.type == 'msg') {
           if (msg == null) {
@@ -135,6 +134,8 @@ export const Topic = ({
               time: Date.now(),
             });
             setMessages([...messages]);
+          } else if (part.data.type == 'userMessage') {
+            showAlert(part.data.kind, part.data.msg);
           }
         } else if (part.type == 'end') {
           // Don't refer to last, it has not been updated

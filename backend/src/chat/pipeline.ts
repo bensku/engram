@@ -1,3 +1,4 @@
+import { metadataForModel } from '../service/completion';
 import { openAITranscriptions } from '../service/impl/openai';
 import {
   Message,
@@ -16,7 +17,7 @@ import { generateReply, ReplyStream } from './reply';
 import { generateTitle, updateTopic } from './title-gen';
 
 const transcribe: TranscriptionService | null = process.env.OPENAI_API_KEY
-  ? openAITranscriptions(process.env.OPENAI_API_KEY, 'canary-whisper')
+  ? openAITranscriptions(process.env.OPENAI_API_KEY, 'whisper-1')
   : null;
 
 export async function handleMessage(
@@ -66,6 +67,9 @@ export async function handleMessage(
   const context = await topicContext(generateCtx);
   generateCtx.context = context;
 
+  // Send user's own message back to them
+  stream.start(message, engine.id, Date.now());
+
   // Before we generate anything, go through pre handlers
   for (const handler of engine.preHandlers) {
     const maybePromise = handler(generateCtx);
@@ -74,8 +78,26 @@ export async function handleMessage(
     } // else: not an async handler
   }
 
-  // Send user's own message back to them
-  stream.start(message, MODEL.getOrThrow(generateCtx), Date.now());
+  // If there are images but current model doesn't support that, warn the user
+  const modelMeta = metadataForModel(MODEL.getOrThrow(generateCtx));
+  if (!modelMeta.capabilities?.includes('image_input')) {
+    let hasImages = false;
+    for (const msg of context) {
+      for (const part of msg.parts) {
+        if (part.type == 'image') {
+          hasImages = true;
+        }
+      }
+    }
+
+    if (hasImages) {
+      stream.sendFragment({
+        type: 'userMessage',
+        kind: 'error',
+        msg: 'This topic includes images. Current model does not support them; this could lead to quality issues.',
+      });
+    }
+  }
 
   // Stream reply back to user (and save it once it has been completed)
   for (;;) {
@@ -176,7 +198,7 @@ export interface GenerateContext {
 
   /**
    * Context. Can be modified in pre-generation callbacks, but the
-   * modifications won't be stored.
+   * modifications won't be stored or displayed to the user.
    */
   context: Message[];
 }

@@ -188,7 +188,6 @@ if (TOGETHER_API_KEY) {
       outputCost: 0.0002,
     },
   );
-  // TODO maybe migrate fully to OpenAI client?
   registerService(
     'together:mixtral-nous-hermes-2-dpo',
     openAICompletions(

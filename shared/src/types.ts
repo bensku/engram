@@ -56,7 +56,14 @@ interface ToolCallCompletedFragment extends FragmentBase {
   text: string;
 }
 
+interface UserMessageFragment extends FragmentBase {
+  type: 'userMessage';
+  kind: 'error' | 'info';
+  msg: string;
+}
+
 export type Fragment =
   | TitleFragment
   | ToolCallFragment
-  | ToolCallCompletedFragment;
+  | ToolCallCompletedFragment
+  | UserMessageFragment;

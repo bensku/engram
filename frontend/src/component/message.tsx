@@ -12,11 +12,11 @@ import { Attachment } from './attachment';
 export const Message = ({
   msg,
   replaceMsg,
-  isLastBotMsg,
+  isLastMsg,
 }: {
   msg: responses['Message'];
   replaceMsg: (id: number, msg: responses['Message'] | null) => void;
-  isLastBotMsg: boolean;
+  isLastMsg: boolean;
 }) => {
   if (msg.type == 'tool') {
     return (
@@ -59,7 +59,7 @@ export const Message = ({
         <div class="max">
           {sender} at {formatDate(msg.time)}
         </div>
-        {isLastBotMsg ? (
+        {isLastMsg && msg.type == 'bot' ? (
           <button class="transparent circle">
             <i>refresh</i>
             <div class="tooltip bottom">Regenerate</div>
@@ -122,12 +122,10 @@ export const MessageList = ({
           msg={msg}
           key={msg.id}
           replaceMsg={replaceMessage}
-          isLastBotMsg={!last && i == messages.length - 1 && msg.type == 'bot'}
+          isLastMsg={!last && i == messages.length - 1 && msg.type == 'bot'}
         />
       ))}
-      {last && (
-        <Message msg={last} replaceMsg={() => null} isLastBotMsg={true} />
-      )}
+      {last && <Message msg={last} replaceMsg={() => null} isLastMsg={true} />}
     </div>
   );
 };

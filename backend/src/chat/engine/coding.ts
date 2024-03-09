@@ -18,15 +18,15 @@ const engine = registerEngine(
   'coding',
   'Coding',
   MODEL.create({
-    defaultValue: 'openai:gpt-4',
+    defaultValue: 'anthropic:claude-3-opus',
     choices: [
-      { value: 'openai:gpt-4', title: 'GPT-4 (default)' },
-      { value: 'anthropic:claude-3-opus', title: 'Claude 3 Opus' },
+      { value: 'anthropic:claude-3-opus', title: 'Claude 3 Opus (default)' },
+      { value: 'mistral:large', title: 'Mistral Large' },
+      { value: 'openai:gpt-4', title: 'GPT-4' },
       {
         value: 'anthropic:claude-3-sonnet',
         title: 'Claude 3 Sonnet',
       },
-      { value: 'mistral:large', title: 'Mistral Large' },
     ],
     userEditable: true,
   }),

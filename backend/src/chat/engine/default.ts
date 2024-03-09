@@ -35,14 +35,13 @@ const engine = registerEngine(
   'default',
   'Curious',
   MODEL.create({
-    defaultValue: 'openai:gpt-3.5-turbo',
+    defaultValue: 'anthropic:claude-3-sonnet',
     choices: [
-      { value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5 (default)' },
-      { value: 'openai:gpt-4', title: 'GPT-4' },
-      { value: 'anthropic:claude-3-sonnet', title: 'Claude 3 Sonnet' },
-      { value: 'anthropic:claude-3-opus', title: 'Claude 3 Opus' },
-      { value: 'anyscale:mixtral-8x7', title: 'Mixtral 8x7B' },
-      { value: 'engram:multi-step', title: 'Multi-step (Mixtral)' },
+      {
+        value: 'anthropic:claude-3-sonnet',
+        title: 'Claude 3 Sonnet (default)',
+      },
+      { value: 'openai:gpt-3.5-turbo', title: 'GPT-3.5' },
     ],
     userEditable: true,
   }),
@@ -54,10 +53,6 @@ const engine = registerEngine(
   }),
   PROMPT.create({
     defaultValue: {
-      // TODO improve this, somehow?
-      'engram:multi-step': [
-        'You are Spark, a friendly and helpful AI chat bot. Please be brief in your replies unless I ask otherwise.',
-      ],
       default: [
         `You are Spark, a friendly and helpful AI assistant. Your main task is to help a curious human user to learn new things, and to help them make informed decisions.
     
