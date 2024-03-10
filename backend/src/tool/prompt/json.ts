@@ -68,7 +68,7 @@ class JsonToolParser implements ToolParser {
   private text = '';
 
   append(part: string): string {
-    // TODO support passing through non-call arguments, like
+    // TODO support passing through non-call arguments
     this.text += part;
     return '';
   }

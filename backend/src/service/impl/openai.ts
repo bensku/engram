@@ -57,7 +57,6 @@ export function openAICompletions(
 
       const partialCalls: PartialCall[] = [];
 
-      // TODO error handling
       for await (const line of readLines(reader)) {
         if (line.trim() == 'data: [DONE]') {
           if (partialCalls.length > 0) {
@@ -79,7 +78,6 @@ export function openAICompletions(
         } else if (line.startsWith('data: ')) {
           let part: ChatCompletionPart;
           try {
-            // FIXME perplexity API seems to return line breaks, is readLines() bugged?
             part = JSON.parse(
               line.substring('data: '.length),
             ) as ChatCompletionPart;
@@ -112,8 +110,9 @@ export function openAICompletions(
             yield { type: 'text', text: delta.content };
           }
         } else if (line.length > 0) {
-          // Probably an error, better log it
+          // Probably an error, better log it and stop now
           console.error(line);
+          throw new Error(`openai api error: ${line}`);
         }
       }
     };

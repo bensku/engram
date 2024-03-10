@@ -47,7 +47,11 @@ export const EmptyTopic = ({
           title={currentTopic.value.title ?? ''}
           setTitle={(title) => void updateTopic({ title: title }, 'never')}
         />
-        <MessageList messages={[]} replaceMessage={() => null} />
+        <MessageList
+          messages={[]}
+          replaceMessage={() => null}
+          regenerate={() => null}
+        />
         <MessageForm
           onSubmit={(text) => newTopic(text, 'text')}
           uploadHandler={addAttachment}
@@ -78,97 +82,95 @@ export const Topic = ({
       if (pendingMessage.value) {
         const msg = pendingMessage.value;
         pendingMessage.value = null;
-        post(msg.content, msg.format);
+        void post(msg.content, msg.format);
       }
     })();
   }, [id]);
 
-  const post = (message: string, format: string) => {
-    void (async () => {
-      // Post user message to server
-      const reply = postMessage({
-        topicId: id,
-        message: { message, format, attachments: pendingAttachments.value },
-      });
-      pendingAttachments.value = [];
+  const post = async (message: string, format: string) => {
+    // Post user message to server
+    const reply = postMessage({
+      topicId: id,
+      message: { message, format, attachments: pendingAttachments.value },
+    });
+    pendingAttachments.value = [];
 
-      // Stream reply back from server
-      // When server is finished, prepare for user reply
-      let msg: responses['BotMessage'] | null = null;
-      for await (const part of reply) {
-        if (part.type == 'start') {
-          if (part.replyTo) {
-            messages.push(part.replyTo as responses['Message']);
-          }
-          if (msg && msg.parts.length > 0) {
-            messages.push(msg);
-            setLast(undefined); // Avoid briefly displaying same message twice!
-          }
-          msg = {
-            type: 'bot',
-            id: -1,
-            agent: part.agent,
-            parts: [{ type: 'text', text: '' }],
-            time: part.time,
-          };
-          setMessages([...messages]);
-        } else if (part.type == 'msg') {
-          if (msg == null) {
-            throw new Error('wrong order in reply stream');
-          }
-          (msg.parts[0] as responses['TextPart']).text += part.data;
-          setLast({ ...msg });
-        } else if (part.type == 'fragment') {
-          // TODO proper fragment handling
-          if (part.data.type == 'title') {
-            void updateTopic({ title: part.data.title }, 'never');
-          } else if (part.data.type == 'toolCall') {
-            // TODO show something about tool call in flight
-          } else if (part.data.type == 'toolCallCompleted') {
-            messages.push({
-              type: 'tool',
-              id: Date.now(), // Just something that won't have duplicates
-              tool: part.data.tool,
-              callId: '',
-              parts: [{ type: 'text', text: part.data.text }],
-              time: Date.now(),
-            });
-            setMessages([...messages]);
-          } else if (part.data.type == 'userMessage') {
-            showAlert(part.data.kind, part.data.msg);
-          }
-        } else if (part.type == 'end') {
-          // Don't refer to last, it has not been updated
-          if (msg == null) {
-            throw new Error('wrong order in reply stream');
-          }
-          msg.id = part.id;
-          setMessages([...messages, msg]);
-          setLast(undefined);
-        } // else: should never happen
-      }
-
-      // After message has been received, read it out loud (if speech mode is enabled)
-      if (speechInputEnabled.value) {
-        const text = msg?.parts
-          .map((part) => (part.type == 'text' ? part.text : ''))
-          .join('');
-        if (text) {
-          new Howl({
-            src: `${BASE_URL}/tts/${encodeURIComponent(text)}`,
-            html5: true,
-            autoplay: true,
-            format: 'opus',
-            onloaderror: (_, error) => {
-              console.error(error);
-            },
-            onplayerror: (_, error) => {
-              console.error(error);
-            },
-          });
+    // Stream reply back from server
+    // When server is finished, prepare for user reply
+    let msg: responses['BotMessage'] | null = null;
+    for await (const part of reply) {
+      if (part.type == 'start') {
+        if (part.replyTo) {
+          messages.push(part.replyTo as responses['Message']);
         }
+        if (msg && msg.parts.length > 0) {
+          messages.push(msg);
+          setLast(undefined); // Avoid briefly displaying same message twice!
+        }
+        msg = {
+          type: 'bot',
+          id: -1,
+          agent: part.agent,
+          parts: [{ type: 'text', text: '' }],
+          time: part.time,
+        };
+        setMessages([...messages]);
+      } else if (part.type == 'msg') {
+        if (msg == null) {
+          throw new Error('wrong order in reply stream');
+        }
+        (msg.parts[0] as responses['TextPart']).text += part.data;
+        setLast({ ...msg });
+      } else if (part.type == 'fragment') {
+        // TODO refactor fragment handling out of here!
+        if (part.data.type == 'title') {
+          void updateTopic({ title: part.data.title }, 'never');
+        } else if (part.data.type == 'toolCall') {
+          // TODO show something about tool call in flight
+        } else if (part.data.type == 'toolCallCompleted') {
+          messages.push({
+            type: 'tool',
+            id: Date.now(), // Just something that won't have duplicates
+            tool: part.data.tool,
+            callId: '',
+            parts: [{ type: 'text', text: part.data.text }],
+            time: Date.now(),
+          });
+          setMessages([...messages]);
+        } else if (part.data.type == 'userMessage') {
+          showAlert(part.data.kind, part.data.msg);
+        }
+      } else if (part.type == 'end') {
+        // Don't refer to last, it has not been updated
+        if (msg == null) {
+          throw new Error('wrong order in reply stream');
+        }
+        msg.id = part.id;
+        setMessages([...messages, msg]);
+        setLast(undefined);
+      } // else: should never happen
+    }
+
+    // After message has been received, read it out loud (if speech mode is enabled)
+    if (speechInputEnabled.value) {
+      const text = msg?.parts
+        .map((part) => (part.type == 'text' ? part.text : ''))
+        .join('');
+      if (text) {
+        new Howl({
+          src: `${BASE_URL}/tts/${encodeURIComponent(text)}`,
+          html5: true,
+          autoplay: true,
+          format: 'opus',
+          onloaderror: (_, error) => {
+            console.error(error);
+          },
+          onplayerror: (_, error) => {
+            console.error(error);
+          },
+        });
       }
-    })();
+    }
   };
 
   const updateTitle = debounce((newTitle: string) => {
@@ -203,7 +205,11 @@ export const Topic = ({
     }
   };
 
-  speechInputHandler.value = (audio) => post(audio, 'speech');
+  const regenerate = () => {
+    void post('Try again.', 'text');
+  };
+
+  speechInputHandler.value = (audio) => void post(audio, 'speech');
 
   return (
     <>
@@ -217,9 +223,10 @@ export const Topic = ({
           messages={messages}
           last={last}
           replaceMessage={replaceMessage}
+          regenerate={regenerate}
         />
         <MessageForm
-          onSubmit={(text) => post(text, 'text')}
+          onSubmit={(text) => void post(text, 'text')}
           uploadHandler={addAttachment}
         />
       </DropZone>

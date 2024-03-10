@@ -116,8 +116,13 @@ export async function handleMessage(
         // Check LLM-generated arguments
         const request = await checkToolUsage(call);
         if ('error' in request) {
-          // TODO error handling
+          // TODO better error handling
           console.error(request.error);
+          stream.sendFragment({
+            type: 'userMessage',
+            kind: 'error',
+            msg: request.error,
+          });
         } else {
           // TODO support for asking user confirmation
           stream.sendFragment({
@@ -130,8 +135,13 @@ export async function handleMessage(
         // Call the tool
         const result = await invokeTool(call);
         if ('error' in result) {
-          // TODO error handling
+          // TODO better error handling
           console.error(result.error);
+          stream.sendFragment({
+            type: 'userMessage',
+            kind: 'error',
+            msg: result.error,
+          });
         } else {
           const toolMsg: Message = {
             id: -1,

@@ -3,7 +3,6 @@ import { Fetcher } from 'openapi-typescript-fetch';
 
 export type { paths } from '../../generated/engram';
 
-// TODO configurable base URL
 export const BASE_URL = '/api';
 
 export const fetcher = Fetcher.for<paths>();
@@ -26,5 +25,4 @@ fetcher.configure({
       }
     },
   ],
-  // TODO authentication
 });

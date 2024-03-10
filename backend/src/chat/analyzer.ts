@@ -40,7 +40,7 @@ export function newAnalyzer<T extends object>(
     }
     if (!ajv.validate(replyFormat, json)) {
       console.error(json);
-      throw new Error(); // TODO handle this without crashing
+      throw new Error(); // TODO handle this by trying again, with failure and error in context
     }
     return json;
   };

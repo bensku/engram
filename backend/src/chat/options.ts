@@ -111,10 +111,3 @@ export const SPEECH_MODE = new OptionType<ToggleOption>(
   'speech-mode',
   'Speech mode',
 );
-
-// TODO unused for now
-export const SPEECH_VOICE = new OptionType<UnknownOption<string>>(
-  'unknown',
-  'speech-voice',
-  'Speech voice',
-);

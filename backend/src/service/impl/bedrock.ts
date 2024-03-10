@@ -69,7 +69,10 @@ export function bedrockCompletions(
             }
           }
         }
-      } // TODO: else handle errors
+      } else {
+        // TODO better error reporting
+        throw new Error(`bedrock API error`);
+      }
     }
     const calls = toolParser.parse();
     if (calls.length > 0) {

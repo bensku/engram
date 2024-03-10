@@ -6,7 +6,6 @@ export class AttachmentController extends Controller {
   @Security('auth')
   @Get('/{objectId}')
   async getAttachment(objectId: string): Promise<Uint8Array | null> {
-    // TODO redirect support for non-data URLs
     if (USE_REDIRECTS) {
       const url = await getAttachmentUrl(objectId);
       this.setHeader('Location', url);

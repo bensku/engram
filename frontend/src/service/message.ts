@@ -2,6 +2,7 @@ import { readLines } from '@bensku/engram-shared/src/sse';
 import { operations } from '../types';
 import { BASE_URL, fetcher } from './api';
 import { CompletionPart } from '@bensku/engram-shared/src/types';
+import { showAlert } from '../component/alert';
 
 export const getMessages = fetcher
   .path('/message/{topicId}')
@@ -21,10 +22,10 @@ export async function* postMessage({
     headers: {
       'Content-Type': 'application/json',
     },
-    // TODO auth
   });
   if (!response.body) {
-    throw new Error(); // TODO error handling
+    showAlert('error', 'Server error: ' + response.statusText);
+    return;
   }
   const reader = response.body.getReader();
   for await (const line of readLines(reader)) {

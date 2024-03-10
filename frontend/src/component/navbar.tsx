@@ -35,7 +35,6 @@ const UserCard = () => {
     <article class="row container top-align small-padding">
       <button class="transparent circle extra">
         <MinidenticonImg username={user.name} lightness={40} saturation={80} />
-        <div class="tooltip bottom">Settings</div>
       </button>
       <div class="small-padding vertical">
         <div class="large-text">{user.name}</div>
@@ -79,7 +78,6 @@ const TopicList = ({
   topics: responses['Topic'][];
   deleteTopic: (id: number) => void;
 }) => {
-  // TODO highlight current topic
   return (
     <div class="vertical">
       {topics.map((topic) => (

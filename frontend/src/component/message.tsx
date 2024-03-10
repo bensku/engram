@@ -14,10 +14,14 @@ export const Message = ({
   msg,
   replaceMsg,
   isLastMsg,
+  regenerate,
+  finished,
 }: {
   msg: responses['Message'];
   replaceMsg: (id: number, msg: responses['Message'] | null) => void;
   isLastMsg: boolean;
+  regenerate: () => void;
+  finished: boolean;
 }) => {
   if (msg.type == 'tool') {
     return (
@@ -60,8 +64,8 @@ export const Message = ({
         <div class="max">
           {sender} at {formatDate(msg.time)}
         </div>
-        {isLastMsg && msg.type == 'bot' ? (
-          <button class="transparent circle">
+        {isLastMsg && msg.type == 'bot' && finished ? (
+          <button class="transparent circle" onClick={regenerate}>
             <i>refresh</i>
             <div class="tooltip bottom">Regenerate</div>
           </button>
@@ -101,10 +105,12 @@ export const MessageList = ({
   messages,
   last,
   replaceMessage,
+  regenerate,
 }: {
   messages: responses['Message'][];
   last?: responses['Message'];
   replaceMessage: (id: number, msg: responses['Message'] | null) => void;
+  regenerate: () => void;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -124,9 +130,19 @@ export const MessageList = ({
           key={msg.id}
           replaceMsg={replaceMessage}
           isLastMsg={!last && i == messages.length - 1 && msg.type == 'bot'}
+          regenerate={regenerate}
+          finished={true}
         />
       ))}
-      {last && <Message msg={last} replaceMsg={() => null} isLastMsg={true} />}
+      {last && (
+        <Message
+          msg={last}
+          replaceMsg={() => null}
+          isLastMsg={true}
+          regenerate={regenerate}
+          finished={false}
+        />
+      )}
     </div>
   );
 };

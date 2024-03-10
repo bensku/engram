@@ -1,3 +1,4 @@
+import { getTool } from '../../tool/core';
 import { registerEngine } from '../engine';
 import { MAX_TOKENS, MODEL, PROMPT, TEMPERATURE } from '../options';
 
@@ -39,5 +40,9 @@ registerEngine(
   }),
   PROMPT.create({
     defaultValue: { default: ['You are a helpful AI assistant.'] },
+  }),
+  getTool('weather_forecast').enableOption.create({
+    defaultValue: false,
+    userEditable: true,
   }),
 );
