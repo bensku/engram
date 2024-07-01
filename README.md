@@ -2,10 +2,11 @@
 Engram is a chat bot interface powered by large language models (LLMs).
 If you're familiar with ChatGPT, this shouldn't be too different.
 
-Demo instructions:
-* Engram is available at [ai.benjami.fi](https://ai.benjami.fi/)
-  * Login is necessary (LLMs are expensive!); use user "engram-demo" and password "6YllfnuyohODY2J"
-* Hour log is available [here](https://wiki.benjami.fi/s/c95bfe5c-81ec-4a0d-b3cc-cd372f0b950d) (no login needed)
+I started this project to get some experience on working with LLMs;
+later, I also realized that the work I had already done was (almost)
+free university study credits. I still occasionally use Engram myself, but
+realistically there is no reason why *you* should pick it instead of another
+self-hosted LLM interface.
 
 ## Caveats
 Before we begin, there are several limitations that you should be aware of:
